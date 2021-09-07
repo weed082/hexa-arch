@@ -5,17 +5,26 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/core"
+	"github.com/ByungHakNoh/hexagonal-microservice/external"
 )
 
 func main() {
-	r := core.NewRouter()
-	r.Get("/home", func(rw http.ResponseWriter, r *http.Request) {
-
+	r := external.NewRouter()
+	r.Use(middlewareTest) // 미들웨어 사용하기
+	r.Get("/", func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(rw, "home")
 	})
-	r.Get("/test/:id/:test([0-9]+)", func(rw http.ResponseWriter, r *http.Request) {
-		fmt.Println(core.URLParam(r))
+	r.Get("/test/:id([0-9]+)", func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(rw, external.URLParam(r))
 	})
-	server := core.NewServer(r, ":5000")
+	server := external.NewServer(r, ":5000")
 	log.Fatal(server.ListenAndServe())
+}
+
+// 미들웨어 만들기
+func middlewareTest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(rw, "middle")
+		next.ServeHTTP(rw, r)
+	})
 }
