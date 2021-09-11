@@ -1,4 +1,4 @@
-package external
+package router
 
 import (
 	"context"
@@ -19,7 +19,7 @@ type Router struct {
 }
 
 // ---------------- (1) Router 객체 생성 ----------------
-func NewRouter() *Router {
+func New() *Router {
 	return &Router{
 		routes:      make(map[string]map[string]http.HandlerFunc),
 		regexRoutes: make(map[string]map[*regexp.Regexp]http.HandlerFunc),
@@ -121,12 +121,4 @@ func (router *Router) makeContextWithParams(r *http.Request, regexPath *regexp.R
 	}
 	context := context.WithValue(r.Context(), paramKey, params)
 	return r.WithContext(context)
-}
-
-// ---------------- (?) util ----------------
-func URLParam(r *http.Request) map[string]string {
-	if params := r.Context().Value(paramKey); params != nil {
-		return params.(map[string]string)
-	}
-	return nil
 }
