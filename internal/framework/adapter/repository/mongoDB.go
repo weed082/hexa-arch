@@ -1,4 +1,4 @@
-package mongoDB
+package repository
 
 import (
 	"context"
@@ -11,23 +11,13 @@ import (
 )
 
 type MongoDB struct {
-	Client        *mongo.Client
-	Ctx           context.Context
+	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
+	client        *mongo.Client
 }
 
-func New() *MongoDB {
+func NewMongoDB() *MongoDB {
 	ctx, ctxCancelFunc := context.WithTimeout(context.Background(), 5*time.Second) // repository context
-	client := connect(ctx)
-	return &MongoDB{
-		Client:        client,
-		Ctx:           ctx,
-		ctxCancelFunc: ctxCancelFunc,
-	}
-}
-
-// connect mongoDB
-func connect(ctx context.Context) *mongo.Client {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
 	if err != nil {
 		log.Fatalf("mongoDB new client failed : %v", err)
@@ -42,14 +32,18 @@ func connect(ctx context.Context) *mongo.Client {
 	if err != nil {
 		log.Fatalf("mongoDB ping failed : %v", err)
 	}
-	return client
+	return &MongoDB{
+		ctx:           ctx,
+		ctxCancelFunc: ctxCancelFunc,
+		client:        client,
+	}
 }
 
 // disconnect to mongoDB
-func (db MongoDB) Disconnect() {
-	err := db.Client.Disconnect(db.Ctx)
+func (mongoDB MongoDB) Disconnect() {
+	err := mongoDB.client.Disconnect(mongoDB.ctx)
 	if err != nil {
 		log.Fatalf("mongoDB disconnect failed : %v", err)
 	}
-	db.ctxCancelFunc()
+	mongoDB.ctxCancelFunc()
 }
