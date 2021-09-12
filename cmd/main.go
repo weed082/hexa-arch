@@ -1,7 +1,21 @@
 package main
 
-import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/rest"
+import (
+	"fmt"
+	"log"
+
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
+)
 
 func main() {
-	rest.NewRestAdapter().Run()
+
+	repository := repository.New()
+
+	defer repository.Disconnect()
+
+	result, err := repository.Test()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
 }

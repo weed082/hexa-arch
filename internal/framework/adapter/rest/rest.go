@@ -7,15 +7,15 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/rest/server"
 )
 
-type Adapter struct {
+type Rest struct {
 }
 
-func NewRestAdapter() *Adapter {
-	return &Adapter{}
+func NewRestAdapter() *Rest {
+	return &Rest{}
 }
 
-func (rest Adapter) Run() {
+func (rest Rest) Run() {
 	r := router.New()
-	httpServer := server.New(r, ":5000")
+	httpServer := server.New(r, ":8080")
 	log.Fatal(httpServer.ListenAndServe())
 }
