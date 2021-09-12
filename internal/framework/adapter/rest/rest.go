@@ -24,6 +24,6 @@ func (rest Adapter) Run() {
 	r.Get("/test/:id([0-9]+)", func(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, router.URLParam(r))
 	})
-	server := server.New(r, ":5000")
-	log.Fatal(server.ListenAndServe())
+	httpServer := server.New(r, ":5000")
+	log.Fatal(httpServer.ListenAndServe())
 }
