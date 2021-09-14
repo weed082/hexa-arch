@@ -1,16 +1,26 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest"
 )
 
 func main() {
+	// env
 	dbaseDriver := os.Getenv("DB_DRIVER")
 	dsourceName := os.Getenv("DS_NAME")
-	repository.NewMongoDB()
-	// repository.NewMysql(dbaseDriver, dsourceName)
-	fmt.Println(dbaseDriver, dsourceName)
+
+	// repository
+	mongoDB := repository.NewMongoDB()
+	mysqlDB := repository.NewMysql(dbaseDriver, dsourceName)
+
+	// application
+	userApp := application.NewUserApp(mongoDB, mysqlDB)
+
+	// server
+	server := rest.NewRestAdapter(userApp)
+	server.Run()
 }
