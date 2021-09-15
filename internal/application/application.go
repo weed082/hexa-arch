@@ -4,11 +4,11 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
-type UserApp struct {
+type Application struct {
 	mysqlDB port.UserSql
 	mongoDB port.UserNoSql
 }
 
-func NewUserApp(mysqlDB port.UserSql, mongoDB port.UserNoSql) *UserApp {
-	return &UserApp{mysqlDB: mysqlDB, mongoDB: mongoDB}
+func New(mysqlDB port.UserSql, mongoDB port.UserNoSql) *Application {
+	return &Application{mysqlDB: mysqlDB, mongoDB: mongoDB}
 }

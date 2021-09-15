@@ -4,8 +4,9 @@ import (
 	"os"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/mongo_db"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/mysql"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/rest"
 )
 
 func main() {
@@ -14,11 +15,11 @@ func main() {
 	dsourceName := os.Getenv("DS_NAME")
 
 	// repository
-	mongoDB := repository.NewMongoDB()
-	mysqlDB := repository.NewMysql(dbaseDriver, dsourceName)
+	mongoDB := mongo_db.NewMongoDB()
+	mysqlDB := mysql.NewMysql(dbaseDriver, dsourceName)
 
 	// application
-	userApp := application.NewUserApp(mongoDB, mysqlDB)
+	userApp := application.New(mongoDB, mysqlDB)
 
 	// server
 	server := rest.NewRestAdapter(userApp)
