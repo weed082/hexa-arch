@@ -7,7 +7,7 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mongo_db"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mysql"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/rest"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest"
 )
 
 func main() {
