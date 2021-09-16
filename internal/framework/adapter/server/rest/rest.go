@@ -3,9 +3,9 @@ package rest
 import (
 	"log"
 
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/core/router"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/core/server"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/server"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
