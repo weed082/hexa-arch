@@ -2,10 +2,12 @@ module github.com/ByungHakNoh/hexagonal-microservice
 
 go 1.17
 
-require go.mongodb.org/mongo-driver v1.7.2
+require (
+	github.com/go-sql-driver/mysql v1.6.0
+	go.mongodb.org/mongo-driver v1.7.2
+)
 
 require (
-	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.9.5 // indirect
