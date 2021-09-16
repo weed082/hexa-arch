@@ -3,8 +3,9 @@ package rest
 import (
 	"log"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/rest/router"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/rest/server"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/server"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
@@ -18,6 +19,7 @@ func NewRestAdapter(userApp port.UserApp) *Rest {
 
 func (rest Rest) Run() {
 	r := router.New()
+	handler.NewUserHandler(rest.userApp).Register(r)
 	httpServer := server.New(r, ":8080")
 	log.Fatal(httpServer.ListenAndServe())
 }

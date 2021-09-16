@@ -28,19 +28,19 @@ func New() *Router {
 
 // ---------------- (2) Route 추가 ----------------
 func (router *Router) Get(path string, handleFunc http.HandlerFunc) {
-	router.addRoute("GET", path, handleFunc)
+	router.addRoute(http.MethodGet, path, handleFunc)
 }
 
 func (router *Router) Post(path string, handleFunc http.HandlerFunc) {
-	router.addRoute("POST", path, handleFunc)
+	router.addRoute(http.MethodPost, path, handleFunc)
 }
 
 func (router *Router) Put(path string, handleFunc http.HandlerFunc) {
-	router.addRoute("PUT", path, handleFunc)
+	router.addRoute(http.MethodPut, path, handleFunc)
 }
 
 func (router *Router) Delete(path string, handleFunc http.HandlerFunc) {
-	router.addRoute("DELETE", path, handleFunc)
+	router.addRoute(http.MethodDelete, path, handleFunc)
 }
 
 func (router *Router) addRoute(method, path string, handleFunc http.HandlerFunc) {
