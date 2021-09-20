@@ -7,7 +7,7 @@ type UserApp struct {
 }
 
 func NewUserApp(repo port.UserRepo) *UserApp {
-	return &UserApp{repo: repo}
+	return &UserApp{repo}
 }
 
 func (app UserApp) Register() {

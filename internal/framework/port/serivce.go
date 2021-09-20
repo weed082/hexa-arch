@@ -1,8 +1,12 @@
 package port
 
-import "net/http"
+import "html/template"
 
 type UserApp interface {
-	Register(rw http.ResponseWriter, r *http.Request)
-	Signin(rw http.ResponseWriter, r *http.Request)
+	Register()
+	Signin()
+}
+
+type TemplateApp interface {
+	RenderPage() (*template.Template, interface{}, error)
 }

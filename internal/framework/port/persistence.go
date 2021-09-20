@@ -8,3 +8,9 @@ type UserSql interface {
 
 type UserNoSql interface {
 }
+
+type TemplateRepo interface {
+}
+
+type TemplateSql interface {
+}
