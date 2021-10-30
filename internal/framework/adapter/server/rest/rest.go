@@ -18,10 +18,10 @@ func NewRestAdapter(userApp port.UserApp, templateApp port.TemplateApp) *Rest {
 	return &Rest{userApp, templateApp}
 }
 
-func (rest Rest) Run() {
+func (rest Rest) Run(port string) {
 	r := router.New()
 	handler.NewUserHandler(rest.userApp).Register(r)
 	handler.NewTemplateHandler(rest.templateApp).Register(r)
-	httpServer := server.New(r, ":8080")
+	httpServer := server.New(r, port)
 	log.Fatal(httpServer.ListenAndServe())
 }
