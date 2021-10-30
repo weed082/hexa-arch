@@ -16,11 +16,11 @@ func NewTemplateHandler(app port.TemplateApp) *TemplateHandler {
 	return &TemplateHandler{app}
 }
 
-func (handler TemplateHandler) Register(r *router.Router) {
+func (handler *TemplateHandler) Register(r *router.Router) {
 	r.Get("/", handler.test)
 }
 
-func (handler TemplateHandler) test(w http.ResponseWriter, r *http.Request) {
+func (handler *TemplateHandler) test(w http.ResponseWriter, r *http.Request) {
 	tmpl, pageData, err := handler.app.RenderPage()
 	if err != nil {
 		log.Fatalf("render page failure: %v", err)

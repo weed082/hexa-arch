@@ -10,10 +10,10 @@ func NewUserApp(repo port.UserRepo) *UserApp {
 	return &UserApp{repo}
 }
 
-func (app UserApp) Register() {
+func (app *UserApp) Register() {
 
 }
 
-func (app UserApp) Signin() {
+func (app *UserApp) Signin() {
 
 }

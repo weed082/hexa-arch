@@ -21,7 +21,7 @@ type PageData struct {
 	Footer template.HTML
 }
 
-func (app TemplateApp) RenderPage() (*template.Template, interface{}, error) {
+func (app *TemplateApp) RenderPage() (*template.Template, interface{}, error) {
 	header := app.makeTemplate("header", "template/header/header.html")
 	layout := app.makeTemplate("layout", "template/main/layout/layout.html")
 	main := app.makeTemplate(layout, "template/main/main.html")
@@ -34,7 +34,7 @@ func (app TemplateApp) RenderPage() (*template.Template, interface{}, error) {
 	return pageTemplate, pageData, nil
 }
 
-func (app TemplateApp) makeTemplate(data interface{}, files ...string) template.HTML {
+func (app *TemplateApp) makeTemplate(data interface{}, files ...string) template.HTML {
 	tmpl := template.Must(template.ParseFiles(files...))
 	byteBuffer := bytes.Buffer{}
 	tmpl.Execute(&byteBuffer, data)

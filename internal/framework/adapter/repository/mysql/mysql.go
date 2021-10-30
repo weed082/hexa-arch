@@ -25,7 +25,7 @@ func NewMysql(driverName, dataSourceName string) *Mysql {
 }
 
 // disconnect to mongoDB
-func (mysql Mysql) Disconnect() {
+func (mysql *Mysql) Disconnect() {
 	err := mysql.db.Close()
 	if err != nil {
 		log.Fatalf("db close failure: %v", err)

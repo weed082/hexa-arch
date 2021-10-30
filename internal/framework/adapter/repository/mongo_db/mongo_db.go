@@ -40,7 +40,7 @@ func NewMongoDB() *MongoDB {
 }
 
 // disconnect to mongoDB
-func (mongoDB MongoDB) Disconnect() {
+func (mongoDB *MongoDB) Disconnect() {
 	err := mongoDB.client.Disconnect(mongoDB.ctx)
 	if err != nil {
 		log.Fatalf("mongoDB disconnect failed : %v", err)

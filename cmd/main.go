@@ -27,7 +27,7 @@ func main() {
 	userApp := application.NewUserApp(userRepo)
 	templateApp := application.NewTemplateApp(templateRepo)
 
-	// rest server
-	server := rest.NewRestAdapter(userApp, templateApp)
-	server.Run(":8080")
+	// rest
+	rest := rest.NewRestAdapter(userApp, templateApp)
+	rest.Run(":8080")
 }

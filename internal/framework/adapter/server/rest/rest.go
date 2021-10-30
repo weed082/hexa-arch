@@ -18,7 +18,7 @@ func NewRestAdapter(userApp port.UserApp, templateApp port.TemplateApp) *Rest {
 	return &Rest{userApp, templateApp}
 }
 
-func (rest Rest) Run(port string) {
+func (rest *Rest) Run(port string) {
 	r := router.New()
 	handler.NewUserHandler(rest.userApp).Register(r)
 	handler.NewTemplateHandler(rest.templateApp).Register(r)
