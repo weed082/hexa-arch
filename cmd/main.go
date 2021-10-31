@@ -8,12 +8,13 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest"
 )
 
-func main() {
-	// env
-	dbaseDriver := "mysql"
-	dsourceName := "root:Admin123@/test"
+const (
+	dbaseDriver = "mysql"
+	dsourceName = "root:Admin123@/test"
+)
 
-	// database
+func main() {
+	// DB
 	mongoDB := mongo_db.NewMongoDB()
 	mysqlDB := mysql.NewMysql(dbaseDriver, dsourceName)
 	defer mongoDB.Disconnect()
@@ -29,5 +30,5 @@ func main() {
 
 	// rest
 	rest := rest.NewRestAdapter(userApp, templateApp)
-	rest.Run(":8080")
+	rest.Run("8080")
 }
