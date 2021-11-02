@@ -1,12 +1,14 @@
 syntax = "proto3";
-
-option go_package="github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/chat";
 package chat;
+option go_package="../chat";
+// protoc --go_out=plugins=grpc:chatserver chat.proto
 
+// 채팅 메시지
 message Message {
-  string body = 1;
+  string name = 1;
+  string body = 2;
 }
 
 service ChatService {
-  rpc SayHello (Message) returns (Message);
+  rpc ChatService(stream Message) returns (stream Message);
 }
