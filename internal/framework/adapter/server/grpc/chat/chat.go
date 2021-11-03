@@ -22,14 +22,7 @@ func (s *Server) ChatService(stream ChatService_ChatServiceServer) error {
 	log.Printf("seding : %d", len(s.streams))
 
 	go s.sendMessage()              // send message to client
-	err := s.receiveMessage(stream) // receive message from client
-	if err == io.EOF {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.receiveMessage(stream) // receive message from client
 }
 
 func (s *Server) sendMessage() {
@@ -49,6 +42,9 @@ func (s *Server) sendMessage() {
 func (s *Server) receiveMessage(stream ChatService_ChatServiceServer) error {
 	for {
 		message, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
 		if err != nil {
 			log.Fatalf("receiving message err: %s", err)
 			return err
