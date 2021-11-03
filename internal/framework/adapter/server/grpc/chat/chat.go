@@ -1,27 +1,58 @@
 package chat
 
 import (
-	"fmt"
+	"io"
 	"log"
-	"time"
 )
 
 type Server struct {
+	streams []ChatService_ChatServiceServer
+	msgCh   chan *Message
 }
 
 func NewServer() *Server {
-	return &Server{}
+	return &Server{
+		streams: []ChatService_ChatServiceServer{},
+		msgCh:   make(chan *Message),
+	}
 }
 
-func (s *Server) ChatService(csi ChatService_ChatServiceServer) error {
-	fmt.Println("client connected")
-	for {
-		err := csi.Send(&Message{Name: "name1", Body: "body1"})
-		if err != nil {
-			log.Fatalf("error sending message: %s", err)
-			break
-		}
-		time.Sleep(1 * time.Second)
+func (s *Server) ChatService(stream ChatService_ChatServiceServer) error {
+	s.streams = append(s.streams, stream)
+	log.Printf("seding : %d", len(s.streams))
+
+	go s.sendMessage()              // send message to client
+	err := s.receiveMessage(stream) // receive message from client
+	if err == io.EOF {
+		return nil
+	}
+	if err != nil {
+		return err
 	}
 	return nil
+}
+
+func (s *Server) sendMessage() {
+	for {
+		msg := <-s.msgCh
+		for _, stream := range s.streams {
+			err := stream.Send(msg)
+			//TODO: error should be send to the channel
+			if err != nil {
+				log.Fatalf("sending message error: %s", err)
+				break
+			}
+		}
+	}
+}
+
+func (s *Server) receiveMessage(stream ChatService_ChatServiceServer) error {
+	for {
+		message, err := stream.Recv()
+		if err != nil {
+			log.Fatalf("receiving message err: %s", err)
+			return err
+		}
+		s.msgCh <- message
+	}
 }
