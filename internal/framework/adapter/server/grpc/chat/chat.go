@@ -5,41 +5,25 @@ import (
 	"log"
 )
 
+// test result : can manage 7935 clients
 type Server struct {
 	streams []ChatService_ChatServiceServer
 	msgCh   chan *Message
 }
 
 func NewServer() *Server {
-	return &Server{
+	server := &Server{
 		streams: []ChatService_ChatServiceServer{},
 		msgCh:   make(chan *Message),
 	}
+	go server.sendMessage() // TODO: need to make worker pool to handle sending message
+	return server
 }
 
-func (s *Server) ChatService(stream ChatService_ChatServiceServer) error {
-	s.streams = append(s.streams, stream)
-	log.Printf("seding : %d", len(s.streams))
+func (server *Server) ChatService(stream ChatService_ChatServiceServer) error {
+	server.streams = append(server.streams, stream)
+	log.Printf("seding : %d", len(server.streams))
 
-	go s.sendMessage()              // send message to client
-	return s.receiveMessage(stream) // receive message from client
-}
-
-func (s *Server) sendMessage() {
-	for {
-		msg := <-s.msgCh
-		for _, stream := range s.streams {
-			err := stream.Send(msg)
-			//TODO: error should be send to the channel
-			if err != nil {
-				log.Fatalf("sending message error: %s", err)
-				break
-			}
-		}
-	}
-}
-
-func (s *Server) receiveMessage(stream ChatService_ChatServiceServer) error {
 	for {
 		message, err := stream.Recv()
 		if err == io.EOF {
@@ -49,6 +33,20 @@ func (s *Server) receiveMessage(stream ChatService_ChatServiceServer) error {
 			log.Fatalf("receiving message err: %s", err)
 			return err
 		}
-		s.msgCh <- message
+		server.msgCh <- message
+	}
+}
+
+func (server *Server) sendMessage() {
+	for {
+		msg := <-server.msgCh
+		for _, stream := range server.streams {
+			err := stream.Send(msg)
+			//TODO: error should be send to the channel
+			if err != nil {
+				log.Fatalf("sending message error: %s", err)
+				break
+			}
+		}
 	}
 }
