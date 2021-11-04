@@ -12,6 +12,13 @@ import (
 )
 
 func main() {
+	for i := 0; i < 1000; i++ {
+		go runClient()
+	}
+	runClient()
+}
+
+func runClient() {
 	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("could not connect to: %s", err)
