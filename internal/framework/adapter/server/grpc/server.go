@@ -20,12 +20,10 @@ func (s *Server) Run(port string) {
 	if err != nil {
 		log.Fatalf("failed to listen on port %s", port)
 	}
+	defer listener.Close()
+
 	grpcServer := grpc.NewServer()
 	chatServer := chat.NewServer()
-	chat.RegisterChatServiceServer(grpcServer, chatServer)
-
-	err = grpcServer.Serve(listener)
-	if grpcServer.Serve(listener) != nil {
-		log.Fatalf("failed to serve grpc server over port %s: %s", port, err)
-	}
+	chat.RegisterChatServiceServer(grpcServer, chatServer) // register chat server
+	log.Fatal(grpcServer.Serve(listener))                  // serve grpc server
 }
