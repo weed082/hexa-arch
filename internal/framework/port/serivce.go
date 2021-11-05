@@ -10,3 +10,6 @@ type UserApp interface {
 type TemplateApp interface {
 	RenderPage() (*template.Template, interface{}, error)
 }
+
+type FileApp interface {
+}
