@@ -10,14 +10,14 @@ import (
 // test result : can manage 7935 clients
 type Server struct {
 	streams []ChatService_ChatServiceServer
-	msgCh   chan *Message
+	msgChan chan *Message
 	fileApp port.FileApp
 }
 
 func NewServer(fileApp port.FileApp) *Server {
 	server := &Server{
 		streams: []ChatService_ChatServiceServer{},
-		msgCh:   make(chan *Message),
+		msgChan: make(chan *Message),
 		fileApp: fileApp,
 	}
 	go server.sendMessage() // TODO: need to make worker pool to handle sending message
@@ -37,22 +37,20 @@ func (server *Server) ChatService(stream ChatService_ChatServiceServer) error {
 			log.Fatalf("receiving message err: %s", err)
 			return err
 		}
-
 		// TODO: if msg type is file
 
-		server.msgCh <- message // send message to msgCh
+		server.msgChan <- message // send message to msgCh
 	}
 }
 
 func (server *Server) sendMessage() {
 	for {
-		msg := <-server.msgCh
+		msg := <-server.msgChan
 		for _, stream := range server.streams {
 			err := stream.Send(msg)
-			//TODO: error should be send to the channel
 			if err != nil {
 				log.Fatalf("sending message error: %s", err)
-				break
+				continue
 			}
 		}
 	}
