@@ -5,8 +5,9 @@ option go_package="../chat";
 
 // 채팅 메시지
 message Message {
-  string name = 1;
-  string body = 2;
+  string type = 1;
+  string name = 2;
+  string body = 3;
 }
 
 service ChatService {

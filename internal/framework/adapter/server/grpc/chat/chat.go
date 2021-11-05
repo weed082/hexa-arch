@@ -3,18 +3,22 @@ package chat
 import (
 	"io"
 	"log"
+
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
 // test result : can manage 7935 clients
 type Server struct {
 	streams []ChatService_ChatServiceServer
 	msgCh   chan *Message
+	fileApp port.FileApp
 }
 
-func NewServer() *Server {
+func NewServer(fileApp port.FileApp) *Server {
 	server := &Server{
 		streams: []ChatService_ChatServiceServer{},
 		msgCh:   make(chan *Message),
+		fileApp: fileApp,
 	}
 	go server.sendMessage() // TODO: need to make worker pool to handle sending message
 	return server
@@ -22,7 +26,7 @@ func NewServer() *Server {
 
 func (server *Server) ChatService(stream ChatService_ChatServiceServer) error {
 	server.streams = append(server.streams, stream)
-	log.Printf("seding : %d", len(server.streams))
+	log.Printf("current client count : %d", len(server.streams))
 
 	for {
 		message, err := stream.Recv()
@@ -33,7 +37,10 @@ func (server *Server) ChatService(stream ChatService_ChatServiceServer) error {
 			log.Fatalf("receiving message err: %s", err)
 			return err
 		}
-		server.msgCh <- message
+
+		// TODO: if msg type is file
+
+		server.msgCh <- message // send message to msgCh
 	}
 }
 
