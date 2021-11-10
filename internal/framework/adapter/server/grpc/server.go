@@ -11,7 +11,6 @@ import (
 
 type Server struct {
 	fileApp port.FileApp
-	userApp port.UserApp
 }
 
 // TODO: param need user app
