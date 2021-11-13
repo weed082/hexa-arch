@@ -9,7 +9,7 @@ import (
 
 const (
 	dbaseDriver = "mysql"
-	dsourceName = "root:Admin123@/test"
+	dsourceName = "root:Admin123@/go_arch"
 )
 
 func main() {
