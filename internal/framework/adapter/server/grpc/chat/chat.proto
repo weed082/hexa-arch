@@ -1,13 +1,14 @@
 syntax = "proto3";
 package chat;
 option go_package="../chat";
-// protoc --go_out=plugins=grpc:chatserver chat.proto
+//! protoc --go_out=plugins=grpc:. chat.proto
 
 // 채팅 메시지
 message Message {
-  string type = 1;
-  string name = 2;
-  string body = 3;
+  int32 room_idx = 1;
+  int32 user_idx = 2;
+  int32 request  = 3;
+  string body    = 5;
 }
 
 service ChatService {

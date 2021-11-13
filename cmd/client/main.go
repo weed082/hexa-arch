@@ -12,16 +12,14 @@ import (
 	"google.golang.org/grpc"
 )
 
-var count = 0
-var mutex = sync.Mutex{}
+const userIdx = 1
 
 func main() {
 	wg := sync.WaitGroup{}
-	for i := 0; i < 3000; i++ {
-		wg.Add(1)
-		fmt.Printf("client count: %d", i)
-		go runClient(wg)
-	}
+	// for i := 0; i < 10; i++ {
+	wg.Add(1)
+	go runClient(wg)
+	// }
 	wg.Wait()
 }
 
@@ -43,10 +41,20 @@ func runClient(wg sync.WaitGroup) {
 }
 
 func sendMessage(stream chat.ChatService_ChatServiceClient) {
-
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		err := stream.Send(&chat.Message{Name: "client", Body: scanner.Text()})
+		var msg *chat.Message
+		switch scanner.Text() {
+		case "create":
+			msg = &chat.Message{Request: chat.CREATE_ROOM_REQ, UserIdx: userIdx}
+		case "join":
+			msg = &chat.Message{Request: chat.JOIN_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
+		case "exit":
+			msg = &chat.Message{Request: chat.EXIT_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
+		default:
+			msg = &chat.Message{Request: chat.TEXT_MSG_REQ, RoomIdx: 1, UserIdx: userIdx, Body: scanner.Text()}
+		}
+		err := stream.Send(msg)
 		if err != nil {
 			log.Fatalf("send to server err: %s", err)
 			break
@@ -61,10 +69,6 @@ func receiveMessage(stream chat.ChatService_ChatServiceClient) {
 			log.Fatalf("client stream error: %s", err)
 			break
 		}
-		mutex.Lock()
-		count++
-		mutex.Unlock()
-		fmt.Println(message.Name, message.Body)
-		fmt.Printf("message count: %d\n", count)
+		fmt.Println(message.Body)
 	}
 }

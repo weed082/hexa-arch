@@ -2,16 +2,16 @@ package application
 
 import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 
-type File struct {
+type FileApp struct {
 	repo port.FileRepo
 }
 
-func NewFileApp(repo port.FileRepo) *File {
-	return &File{
+func NewFileApp(repo port.FileRepo) *FileApp {
+	return &FileApp{
 		repo: repo,
 	}
 }
 
-func handleImage() {
+func (file FileApp) HandleImage() {
 
 }

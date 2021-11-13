@@ -10,13 +10,13 @@ import (
 )
 
 type Server struct {
-	fileApp port.FileApp
+	chatApp port.ChatApp
 }
 
 // TODO: param need user app
-func NewServer(fileApp port.FileApp) Server {
+func NewServer(chatApp port.ChatApp) Server {
 	return Server{
-		fileApp: fileApp,
+		chatApp: chatApp,
 	}
 }
 
@@ -28,7 +28,7 @@ func (s *Server) Run(port string) {
 	defer listener.Close()
 
 	grpcServer := grpc.NewServer()
-	chatServer := chat.NewServer(s.fileApp)
+	chatServer := chat.NewServer(s.chatApp)
 	chat.RegisterChatServiceServer(grpcServer, chatServer) // register chat server
 	log.Fatal(grpcServer.Serve(listener))                  // serve grpc server
 }

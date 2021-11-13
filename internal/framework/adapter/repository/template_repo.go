@@ -3,7 +3,7 @@ package repository
 import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 
 type TemplateRepo struct {
-	sql port.TemplateRepo
+	sql port.TemplateSql
 }
 
 func NewTemplateRepo(sql port.TemplateSql) *TemplateRepo {
