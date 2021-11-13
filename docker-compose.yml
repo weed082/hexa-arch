@@ -8,7 +8,7 @@ services:
       - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: 'Admin123'
-      MYSQL_DATABASE: 'test'
+      MYSQL_DATABASE: 'go_arch'
     volumes:
       - mysql-data:/var/lib/mysql
 
