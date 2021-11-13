@@ -12,17 +12,22 @@ type middleware func(http.Handler) http.Handler
 
 const paramKey key = iota
 
+type regexRoute struct {
+	path       *regexp.Regexp
+	handleFunc http.HandlerFunc
+}
+
+// ---------------- (1) Router 객체 ----------------
 type Router struct {
 	routes      map[string]map[string]http.HandlerFunc
-	regexRoutes map[string]map[*regexp.Regexp]http.HandlerFunc
+	regexRoutes map[string][]regexRoute
 	middlewares []middleware
 }
 
-// ---------------- (1) Router 객체 생성 ----------------
 func New() *Router {
 	return &Router{
 		routes:      make(map[string]map[string]http.HandlerFunc),
-		regexRoutes: make(map[string]map[*regexp.Regexp]http.HandlerFunc),
+		regexRoutes: make(map[string][]regexRoute),
 	}
 }
 
@@ -45,16 +50,14 @@ func (router *Router) Delete(path string, handleFunc http.HandlerFunc) {
 
 func (router *Router) addRoute(method, path string, handleFunc http.HandlerFunc) {
 	if strings.Contains(path, ":") {
-		_, ok := router.regexRoutes[method]
-		if !ok {
-			router.regexRoutes[method] = make(map[*regexp.Regexp]http.HandlerFunc)
+		if _, ok := router.regexRoutes[method]; !ok {
+			router.regexRoutes[method] = []regexRoute{}
 		}
 		path = regexp.MustCompile(`:.[^/]+(?:\([^/]+\))`).ReplaceAllStringFunc(path, router.makeCustomRegexParam)
 		path = regexp.MustCompile(`(:[^/]+)`).ReplaceAllStringFunc(path, router.makeRegexParam)
 		regexPath := regexp.MustCompile("^" + path + "$")
 		chainedHandler := router.chain(handleFunc)
-		router.regexRoutes[method][regexPath] = chainedHandler.ServeHTTP
-		return
+		router.regexRoutes[method] = append(router.regexRoutes[method], regexRoute{regexPath, chainedHandler.ServeHTTP})
 	}
 	_, ok := router.routes[method]
 	if !ok {
@@ -87,8 +90,8 @@ func (router *Router) chain(endpoint http.Handler) http.Handler {
 	}
 	handler := router.middlewares[0](endpoint)
 
-	for i := 1; i < len(router.middlewares); i++ {
-		handler = router.middlewares[i](handler)
+	for _, middleWare := range router.middlewares {
+		handler = middleWare(handler)
 	}
 	return handler
 }
@@ -100,10 +103,10 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		handleFunc(rw, r)
 		return
 	}
-	for regexPath, handleFunc := range router.regexRoutes[r.Method] {
-		if regexPath.MatchString(r.URL.Path) {
-			req := router.makeContextWithParams(r, regexPath)
-			handleFunc(rw, req)
+	for _, regexRoute := range router.regexRoutes[r.Method] {
+		if regexRoute.path.MatchString(r.URL.Path) {
+			req := router.makeContextWithParams(r, regexRoute.path)
+			regexRoute.handleFunc(rw, req)
 			return
 		}
 	}

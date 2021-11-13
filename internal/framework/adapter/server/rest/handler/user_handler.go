@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/core/router"
@@ -16,16 +17,9 @@ func NewUserHandler(app port.UserApp) *UserHandler {
 }
 
 func (handler *UserHandler) Register(r *router.Router) {
-	r.Get("/register", handler.test)
+	r.Get("/register/:test", handler.test)
 }
 
 func (handler *UserHandler) test(w http.ResponseWriter, r *http.Request) {
-}
-
-func (handler *UserHandler) register(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (handler *UserHandler) signin(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("yes")
 }
