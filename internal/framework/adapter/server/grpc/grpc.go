@@ -14,7 +14,6 @@ type Grpc struct {
 	chatApp port.ChatApp
 }
 
-// TODO: param need user app
 func NewServer(chatApp port.ChatApp) *Grpc {
 	return &Grpc{chatApp: chatApp}
 }
