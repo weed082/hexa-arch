@@ -3,14 +3,22 @@ package chat;
 option go_package="../chat";
 //! protoc --go_out=plugins=grpc:. chat.proto
 
-// 채팅 메시지
-message Message {
-  int32 room_idx = 1;
-  int32 user_idx = 2;
-  int32 request  = 3;
-  string body    = 5;
+// 채팅 메시지 요청
+message MsgReq {
+  int32 request  = 1;
+  int32 room_idx = 2;
+  int32 user_idx = 3;
+  string body    = 4;
+}
+
+// 채팅 메시지 응답
+message MsgRes {
+  int32 response = 1;
+  int32 room_idx = 2;
+  int32 user_idx = 3;
+  string body    = 4;
 }
 
 service ChatService {
-  rpc ChatService(stream Message) returns (stream Message);
+  rpc ChatService(stream MsgReq) returns (stream MsgRes);
 }
