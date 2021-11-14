@@ -2,6 +2,9 @@ package concurrency
 
 import "sync"
 
+type Job struct {
+}
+
 type Consumer struct {
 	jobChan    chan Job
 	ingestChan chan interface{}
@@ -21,7 +24,5 @@ func (c Consumer) Generate(wg sync.WaitGroup, count int) {
 }
 
 func (c Consumer) work() {
-	for {
 
-	}
 }
