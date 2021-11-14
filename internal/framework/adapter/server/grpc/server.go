@@ -9,26 +9,24 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Server struct {
+type Grpc struct {
+	Server  *grpc.Server
 	chatApp port.ChatApp
 }
 
 // TODO: param need user app
-func NewServer(chatApp port.ChatApp) Server {
-	return Server{
-		chatApp: chatApp,
-	}
+func NewServer(chatApp port.ChatApp) *Grpc {
+	return &Grpc{chatApp: chatApp}
 }
 
-func (s *Server) Run(port string) {
+func (g *Grpc) Run(port string) {
 	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("failed to listen on port %s", port)
 	}
 	defer listener.Close()
-
-	grpcServer := grpc.NewServer()
-	chatServer := chat.NewServer(s.chatApp)
-	chat.RegisterChatServiceServer(grpcServer, chatServer) // register chat server
-	log.Fatal(grpcServer.Serve(listener))                  // serve grpc server
+	g.Server = grpc.NewServer()
+	chatServer := chat.NewServer(g.chatApp)
+	chat.RegisterChatServiceServer(g.Server, chatServer) // register chat server
+	log.Println(g.Server.Serve(listener))                // serve grpc server
 }

@@ -2,6 +2,7 @@ package rest
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/core/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/core/server"
@@ -10,20 +11,20 @@ import (
 )
 
 type Rest struct {
+	Server      *http.Server
 	userApp     port.UserApp
 	templateApp port.TemplateApp
 }
 
 func NewRestAdapter(userApp port.UserApp, templateApp port.TemplateApp) *Rest {
-	return &Rest{userApp, templateApp}
+	return &Rest{userApp: userApp, templateApp: templateApp}
 }
 
-func (rest *Rest) Run(port string) {
-	r := router.New()
-	handler.NewUserHandler(rest.userApp).Register(r)
-	handler.NewTemplateHandler(rest.templateApp).Register(r)
+func (r *Rest) Run(port string) {
+	router := router.New()
+	handler.NewUserHandler(r.userApp).Register(router)
+	handler.NewTemplateHandler(r.templateApp).Register(router)
 
-	httpServer := server.New(r, ":"+port)
-	defer httpServer.Close()
-	log.Fatal(httpServer.ListenAndServe())
+	r.Server = server.New(router, ":"+port)
+	log.Println(r.Server.ListenAndServe())
 }
