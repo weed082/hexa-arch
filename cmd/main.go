@@ -22,6 +22,12 @@ const (
 	DB_SOURCE_NAME = "root:Admin123@/go_arch"
 )
 
+// database
+var (
+	mysqlDB = mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
+	mongoDB = mongo_db.NewMongoDB()
+)
+
 // server
 var (
 	Grpc *grpc.Grpc
@@ -31,23 +37,19 @@ var (
 var wg = &sync.WaitGroup{}
 
 func main() {
-	mysqlDB := mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
-	mongoDB := mongo_db.NewMongoDB()
-	defer mysqlDB.Disconnect()
-	defer mongoDB.Disconnect()
-
 	wg.Add(2)
-	go runRest(mysqlDB, mongoDB)
-	go runGrpc(mysqlDB)
-
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
+
+	go runRest()
+	go runGrpc()
+
 	<-terminationChan
 	gracefulShutdown()
 	wg.Wait()
 }
 
-func runRest(mysqlDB *mysql.Mysql, mongoDB *mongo_db.MongoDB) {
+func runRest() {
 	defer wg.Done()
 	// repository
 	userRepo := repository.NewUserRepo(mysqlDB, mongoDB)
@@ -60,7 +62,7 @@ func runRest(mysqlDB *mysql.Mysql, mongoDB *mongo_db.MongoDB) {
 	Rest.Run("8080")
 }
 
-func runGrpc(mysqlDB *mysql.Mysql) {
+func runGrpc() {
 	defer wg.Done()
 	// repository
 	chatRepo := repository.NewChatRepo(mysqlDB)
@@ -74,6 +76,8 @@ func runGrpc(mysqlDB *mysql.Mysql) {
 
 func gracefulShutdown() {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
+	defer mysqlDB.Disconnect()
+	defer mongoDB.Disconnect()
 	defer cancelFunc()
 	if err := Rest.Server.Shutdown(ctx); err != nil {
 		log.Printf("shutting down rest server failed: %s", err)
