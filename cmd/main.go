@@ -22,19 +22,16 @@ const (
 	DB_SOURCE_NAME = "root:Admin123@/go_arch"
 )
 
-// database
 var (
-	mysqlDB = mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
-	mongoDB = mongo_db.NewMongoDB()
-)
-
-// server
-var (
+	// server
 	Grpc *grpc.Grpc
 	Rest *rest.Rest
+	// database
+	mysqlDB = mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
+	mongoDB = mongo_db.NewMongoDB()
+	// sync
+	wg = &sync.WaitGroup{}
 )
-
-var wg = &sync.WaitGroup{}
 
 func main() {
 	terminationChan := make(chan os.Signal, 1)
@@ -49,6 +46,7 @@ func main() {
 	wg.Wait()
 }
 
+//! run rest server
 func runRest() {
 	defer wg.Done()
 	// repository
@@ -62,6 +60,7 @@ func runRest() {
 	Rest.Run("8080")
 }
 
+//! run grpc server
 func runGrpc() {
 	defer wg.Done()
 	// repository
@@ -74,6 +73,7 @@ func runGrpc() {
 	log.Println("grpc shut down")
 }
 
+//! shutdown rest, grpc gracefully + close db
 func gracefulShutdown() {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
 	defer mysqlDB.Disconnect()
