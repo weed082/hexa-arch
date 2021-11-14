@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	dbaseDriver = "mysql"
-	dsourceName = "root:Admin123@/go_arch"
+	DB_DRIVER      = "mysql"
+	DB_SOURCE_NAME = "root:Admin123@/go_arch"
 )
 
 // server
@@ -31,7 +31,7 @@ var (
 var wg = &sync.WaitGroup{}
 
 func main() {
-	mysqlDB := mysql.NewMysql(dbaseDriver, dsourceName)
+	mysqlDB := mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
 	mongoDB := mongo_db.NewMongoDB()
 	defer mysqlDB.Disconnect()
 	defer mongoDB.Disconnect()
