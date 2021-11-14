@@ -24,10 +24,3 @@ type UserSql interface {
 
 type UserNoSql interface {
 }
-
-//! template
-type TemplateRepo interface {
-}
-
-type TemplateSql interface {
-}

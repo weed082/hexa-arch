@@ -51,12 +51,10 @@ func runRest() {
 	defer wg.Done()
 	// repository
 	userRepo := repository.NewUserRepo(mysqlDB, mongoDB)
-	templateRepo := repository.NewTemplateRepo(mysqlDB)
 	// application
 	userApp := application.NewUserApp(userRepo)
-	templateApp := application.NewTemplateApp(templateRepo)
 	// rest
-	Rest = rest.NewRestAdapter(userApp, templateApp)
+	Rest = rest.NewRestAdapter(userApp)
 	Rest.Run("8080")
 }
 

@@ -11,19 +11,17 @@ import (
 )
 
 type Rest struct {
-	Server      *http.Server
-	userApp     port.UserApp
-	templateApp port.TemplateApp
+	Server  *http.Server
+	userApp port.UserApp
 }
 
-func NewRestAdapter(userApp port.UserApp, templateApp port.TemplateApp) *Rest {
-	return &Rest{userApp: userApp, templateApp: templateApp}
+func NewRestAdapter(userApp port.UserApp) *Rest {
+	return &Rest{userApp: userApp}
 }
 
 func (r *Rest) Run(port string) {
 	router := router.New()
 	handler.NewUserHandler(r.userApp).Register(router)
-	handler.NewTemplateHandler(r.templateApp).Register(router)
 
 	r.Server = server.New(router, ":"+port)
 	log.Println(r.Server.ListenAndServe())
