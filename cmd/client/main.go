@@ -43,16 +43,16 @@ func runClient(wg sync.WaitGroup) {
 func sendMessage(stream chat.ChatService_ChatServiceClient) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		var msg *chat.Message
+		var msg *chat.MsgReq
 		switch scanner.Text() {
 		case "create":
-			msg = &chat.Message{Request: chat.CREATE_ROOM_REQ, UserIdx: userIdx}
+			msg = &chat.MsgReq{Request: chat.CREATE_ROOM_REQ, UserIdx: userIdx}
 		case "join":
-			msg = &chat.Message{Request: chat.JOIN_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
+			msg = &chat.MsgReq{Request: chat.JOIN_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
 		case "exit":
-			msg = &chat.Message{Request: chat.EXIT_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
+			msg = &chat.MsgReq{Request: chat.EXIT_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
 		default:
-			msg = &chat.Message{Request: chat.TEXT_MSG_REQ, RoomIdx: 1, UserIdx: userIdx, Body: scanner.Text()}
+			msg = &chat.MsgReq{Request: chat.TEXT_MSG_REQ, RoomIdx: 1, UserIdx: userIdx, Body: scanner.Text()}
 		}
 		err := stream.Send(msg)
 		if err != nil {
