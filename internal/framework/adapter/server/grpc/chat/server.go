@@ -26,15 +26,15 @@ type roomReq struct {
 	client  client
 }
 
-type server struct {
+type Server struct {
 	rooms    map[int][]interface{}
 	msgChan  chan *MsgRes
 	roomChan chan roomReq
 	chatApp  port.ChatApp
 }
 
-func NewServer(chatApp port.ChatApp) *server {
-	server := &server{
+func NewServer(chatApp port.ChatApp) *Server {
+	server := &Server{
 		rooms:    make(map[int][]interface{}),
 		msgChan:  make(chan *MsgRes),
 		roomChan: make(chan roomReq),
@@ -45,7 +45,7 @@ func NewServer(chatApp port.ChatApp) *server {
 }
 
 //! --------------------- (1) grpc request ---------------------
-func (s *server) ChatService(stream ChatService_ChatServiceServer) error {
+func (s *Server) ChatService(stream ChatService_ChatServiceServer) error {
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -67,7 +67,7 @@ func (s *server) ChatService(stream ChatService_ChatServiceServer) error {
 }
 
 //! --------------------- (2) handleMsg ---------------------
-func (s *server) handleMsg() {
+func (s *Server) handleMsg() {
 	for {
 		select {
 		case roomReq := <-s.roomChan:
@@ -88,36 +88,42 @@ func (s *server) handleMsg() {
 }
 
 //! ----------- 1) chat room -----------
-func (s *server) createRoom(c client) {
+func (s *Server) createRoom(c client) {
 	roomIdx, err := s.chatApp.CreateRoom(c, s.rooms)
 	if err != nil {
-		log.Printf("create room error : %s", err)
+		log.Printf("create room error : %s", err) // TODO: need to send an error to client
 		return
 	}
 	s.msgChan <- &MsgRes{RoomIdx: int32(roomIdx)}
 }
 
-func (s *server) joinRoom(roomIdx int, c client) {
+func (s *Server) joinRoom(roomIdx int, c client) {
 	err := s.chatApp.JoinRoom(c, s.rooms[roomIdx])
 	if err != nil {
-		log.Printf("join room err : %s", err)
+		log.Printf("join room err : %s", err) // TODO: need to send an error to client
 		return
 	}
 	s.msgChan <- &MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)}
 }
 
-func (s *server) exitRoom(roomIdx, userIdx int) {
+func (s *Server) exitRoom(roomIdx, userIdx int) {
 	for index, participant := range s.rooms[roomIdx] {
-		participant := participant.(client)
-		if userIdx == participant.userIdx {
-			s.chatApp.ExitRoom(roomIdx, userIdx, index, s.rooms)
-			break
+		if userIdx != participant.(client).userIdx {
+			continue
 		}
+		err := s.chatApp.ExitRoom(roomIdx, userIdx, index, s.rooms)
+		if err != nil {
+			log.Printf("exit room err : %s", err) // TODO: need to send an error to client
+			return
+		}
+		s.msgChan <- &MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)}
+		return
 	}
+	log.Println("exit room error : no match client in this room") // TODO: need to send an error to client
 }
 
 //! ----------- 2) broadcast -----------
-func (s *server) broadcastMsg(msg *MsgRes) {
+func (s *Server) broadcastMsg(msg *MsgRes) {
 	for _, c := range s.rooms[int(msg.RoomIdx)] {
 		err := c.(client).stream.Send(msg)
 		if err != nil {
