@@ -16,7 +16,7 @@ func NewChatApp(repo port.ChatRepo) *ChatApp {
 	}
 }
 
-func (chatApp *ChatApp) CreateRoom(rooms map[int][]interface{}, client interface{}) (int, error) {
+func (chatApp *ChatApp) CreateRoom(client interface{}, rooms map[int][]interface{}) (int, error) {
 	roomIdx, err := chatApp.repo.CreateRoom()
 	if err != nil {
 		return 0, err
@@ -30,13 +30,13 @@ func (chatApp *ChatApp) RemoveRoom(roomIdx int, rooms map[int][]interface{}) err
 	return nil
 }
 
-func (chatApp *ChatApp) JoinRoom(clients []interface{}, client interface{}) error {
+func (chatApp *ChatApp) JoinRoom(client interface{}, clients []interface{}) error {
 	clients = append(clients, client)
 	log.Printf("client count: %d", len(clients))
 	return nil
 }
 
-func (chatApp *ChatApp) ExitRoom(roomIdx, userIdx int, rooms map[int][]interface{}, removeIdx int) error {
+func (chatApp *ChatApp) ExitRoom(roomIdx, userIdx, removeIdx int, rooms map[int][]interface{}) error {
 	clients := rooms[roomIdx]
 	clients = append(clients[:removeIdx], clients[removeIdx+1:]...)
 	if len(clients) == 0 {

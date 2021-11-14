@@ -6,10 +6,10 @@ import (
 
 //! ChatApp
 type ChatApp interface {
-	CreateRoom(rooms map[int][]interface{}, client interface{}) (int, error)
+	CreateRoom(client interface{}, rooms map[int][]interface{}) (int, error)
 	RemoveRoom(roomIdx int, rooms map[int][]interface{}) error
-	JoinRoom(clients []interface{}, client interface{}) error
-	ExitRoom(roomIdx, userIdx int, rooms map[int][]interface{}, removeIdx int) error
+	JoinRoom(client interface{}, clients []interface{}) error
+	ExitRoom(roomIdx, userIdx, removeIdx int, rooms map[int][]interface{}) error
 }
 
 //!  User
