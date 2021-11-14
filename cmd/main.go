@@ -37,10 +37,10 @@ var (
 var wg = &sync.WaitGroup{}
 
 func main() {
-	wg.Add(2)
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
 
+	wg.Add(2)
 	go runRest()
 	go runGrpc()
 
