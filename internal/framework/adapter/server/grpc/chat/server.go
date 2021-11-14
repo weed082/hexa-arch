@@ -15,13 +15,6 @@ const (
 	IMAGE_MSG_REQ   = 5
 )
 
-type server struct {
-	rooms    map[int][]interface{}
-	msgChan  chan *MsgRes
-	roomChan chan roomReq
-	chatApp  port.ChatApp
-}
-
 type client struct {
 	userIdx int
 	stream  ChatService_ChatServiceServer
@@ -31,6 +24,13 @@ type roomReq struct {
 	request int
 	roomIdx int
 	client  client
+}
+
+type server struct {
+	rooms    map[int][]interface{}
+	msgChan  chan *MsgRes
+	roomChan chan roomReq
+	chatApp  port.ChatApp
 }
 
 func NewServer(chatApp port.ChatApp) *server {
@@ -116,6 +116,7 @@ func (s *server) exitRoom(roomIdx, userIdx int) {
 	}
 }
 
+//! ----------- 2) broadcast -----------
 func (s *server) broadcastMsg(msg *MsgRes) {
 	for _, c := range s.rooms[int(msg.RoomIdx)] {
 		err := c.(client).stream.Send(msg)
