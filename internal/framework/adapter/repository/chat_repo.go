@@ -2,8 +2,6 @@ package repository
 
 import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 
-var count = 0
-
 type ChatRepo struct {
 	sql port.ChatSql
 }
@@ -15,8 +13,7 @@ func NewChatRepo(sql port.ChatSql) *ChatRepo {
 }
 
 func (r *ChatRepo) CreateRoom() (int, error) {
-	count++
-	return count, nil
+	return 1, nil
 }
 
 func (r *ChatRepo) SendMessage() error {
