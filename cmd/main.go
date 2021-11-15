@@ -19,7 +19,7 @@ import (
 
 const (
 	DB_DRIVER      = "mysql"
-	DB_SOURCE_NAME = "root:Admin123@/go_arch"
+	DB_SOURCE_NAME = "root:Admin123@/test"
 )
 
 var (
@@ -30,7 +30,8 @@ var (
 	mysqlDB = mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
 	mongoDB = mongo_db.NewMongoDB()
 	// sync
-	wg = &sync.WaitGroup{}
+	wg              = &sync.WaitGroup{}
+	ctx, cancelFunc = context.WithCancel(context.Background())
 )
 
 func main() {
@@ -42,6 +43,7 @@ func main() {
 	go runGrpc()
 
 	<-terminationChan
+	cancelFunc()
 	gracefulShutdown()
 	wg.Wait()
 }
@@ -66,7 +68,7 @@ func runGrpc() {
 	// application
 	chatApp := application.NewChatApp(chatRepo)
 	// grpc
-	Grpc = grpc.NewServer(chatApp)
+	Grpc = grpc.NewServer(wg, ctx, chatApp)
 	Grpc.Run("9000")
 	log.Println("grpc shut down")
 }
