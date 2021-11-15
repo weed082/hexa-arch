@@ -49,45 +49,16 @@ func (s *Server) ChatService(stream ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.wp.RegisterEventCallback(core.Job{Callback: s.createRoom(client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJobCallback(core.Job{Callback: s.createRoom(client{int(msg.UserIdx), stream})})
 		case JOIN_ROOM_REQ:
-			s.wp.RegisterEventCallback(core.Job{Callback: s.joinRoom(int(msg.RoomIdx), client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJobCallback(core.Job{Callback: s.joinRoom(int(msg.RoomIdx), client{int(msg.UserIdx), stream})})
 		case EXIT_ROOM_REQ:
-			s.wp.RegisterEventCallback(core.Job{Callback: s.exitRoom(int(msg.RoomIdx), int(msg.UserIdx))})
+			s.wp.RegisterJobCallback(core.Job{Callback: s.exitRoom(int(msg.RoomIdx), int(msg.UserIdx))})
 		case TEXT_MSG_REQ:
-			s.wp.RegisterEventCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
+			s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
 		}
 	}
 }
-
-// //! --------------------- (2) handleMsg ---------------------
-// func (s *Server) handleMsg() {
-// 	defer s.wg.Done()
-// 	for {
-// 		select {
-// 		case roomReq := <-s.roomChan:
-// 			roomIdx := roomReq.roomIdx
-// 			c := roomReq.client
-// 			switch roomReq.request {
-// 			case CREATE_ROOM_REQ:
-// 				s.createRoom(c)
-// 			case JOIN_ROOM_REQ:
-// 				s.joinRoom(roomIdx, c)
-// 			case EXIT_ROOM_REQ:
-// 				s.exitRoom(roomIdx, c.userIdx)
-// 			}
-// 		case msg := <-s.msgChan:
-// 			s.broadcastMsg(msg)
-// 		case <-s.ctx.Done():
-// 			for i := 0; i < 3; i++ {
-// 				time.Sleep(time.Second * 1)
-// 				log.Println("closing")
-// 			}
-// 			log.Println("finished")
-// 			return
-// 		}
-// 	}
-// }
 
 //! ----------- 1) chat room -----------
 func (s *Server) createRoom(c client) func() {
@@ -97,7 +68,7 @@ func (s *Server) createRoom(c client) func() {
 			log.Printf("create room error : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.wp.RegisterEventCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx)})})
+		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx)})})
 	}
 }
 
@@ -108,7 +79,7 @@ func (s *Server) joinRoom(roomIdx int, c client) func() {
 			log.Printf("join room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.wp.RegisterEventCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)})})
+		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)})})
 	}
 }
 
@@ -123,7 +94,7 @@ func (s *Server) exitRoom(roomIdx, userIdx int) func() {
 				log.Printf("exit room err : %s", err) // TODO: need to send an error to client
 				return
 			}
-			s.wp.RegisterEventCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})})
+			s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})})
 			return
 		}
 		log.Println("exit room error : no match client in this room") // TODO: need to send an error to client

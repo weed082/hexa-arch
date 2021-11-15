@@ -62,6 +62,6 @@ func (c WorkerPool) Start() {
 }
 
 //! (3) register event callback
-func (c WorkerPool) RegisterEventCallback(job Job) {
+func (c WorkerPool) RegisterJobCallback(job Job) {
 	c.ingestChan <- job
 }
