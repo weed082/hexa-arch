@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/core"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mongo_db"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mysql"
@@ -19,7 +20,7 @@ import (
 
 const (
 	DB_DRIVER      = "mysql"
-	DB_SOURCE_NAME = "root:Admin123@/test"
+	DB_SOURCE_NAME = "root:Admin123@/go_arch"
 )
 
 var (
@@ -29,18 +30,20 @@ var (
 	// database
 	mysqlDB = mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
 	mongoDB = mongo_db.NewMongoDB()
-	// sync
+	// worker pool
 	wg              = &sync.WaitGroup{}
 	ctx, cancelFunc = context.WithCancel(context.Background())
+	wp              = core.NewWorkerPool(wg, ctx, make(chan core.Job), make(chan core.Job))
 )
 
 func main() {
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
+	wp.Generate(3)
 
-	wg.Add(2)
 	go runRest()
 	go runGrpc()
+	go wp.Start()
 
 	<-terminationChan
 	cancelFunc()
@@ -50,7 +53,6 @@ func main() {
 
 //! run rest server
 func runRest() {
-	defer wg.Done()
 	// repository
 	userRepo := repository.NewUserRepo(mysqlDB, mongoDB)
 	// application
@@ -62,13 +64,12 @@ func runRest() {
 
 //! run grpc server
 func runGrpc() {
-	defer wg.Done()
 	// repository
 	chatRepo := repository.NewChatRepo(mysqlDB)
 	// application
 	chatApp := application.NewChatApp(chatRepo)
 	// grpc
-	Grpc = grpc.NewServer(wg, ctx, chatApp)
+	Grpc = grpc.NewServer(wp, chatApp)
 	Grpc.Run("9000")
 	log.Println("grpc shut down")
 }
