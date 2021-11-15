@@ -1,8 +1,10 @@
 package grpc
 
 import (
+	"context"
 	"log"
 	"net"
+	"sync"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
@@ -10,12 +12,18 @@ import (
 )
 
 type Grpc struct {
+	wg      *sync.WaitGroup
+	ctx     context.Context
 	Server  *grpc.Server
 	chatApp port.ChatApp
 }
 
-func NewServer(chatApp port.ChatApp) *Grpc {
-	return &Grpc{chatApp: chatApp}
+func NewServer(wg *sync.WaitGroup, ctx context.Context, chatApp port.ChatApp) *Grpc {
+	return &Grpc{
+		wg:      wg,
+		ctx:     ctx,
+		chatApp: chatApp,
+	}
 }
 
 func (g *Grpc) Run(port string) {
@@ -25,7 +33,7 @@ func (g *Grpc) Run(port string) {
 	}
 	defer listener.Close()
 	g.Server = grpc.NewServer()
-	chatServer := chat.NewServer(g.chatApp)
+	chatServer := chat.NewServer(g.wg, g.ctx, g.chatApp)
 	chat.RegisterChatServiceServer(g.Server, chatServer) // register chat server
 	log.Println(g.Server.Serve(listener))                // serve grpc server
 }
