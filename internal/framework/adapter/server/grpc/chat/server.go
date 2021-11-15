@@ -1,8 +1,11 @@
 package chat
 
 import (
+	"context"
 	"io"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
@@ -27,19 +30,24 @@ type roomReq struct {
 }
 
 type Server struct {
+	wg       *sync.WaitGroup
+	ctx      context.Context
 	rooms    map[int][]interface{}
 	msgChan  chan *MsgRes
 	roomChan chan roomReq
 	chatApp  port.ChatApp
 }
 
-func NewServer(chatApp port.ChatApp) *Server {
+func NewServer(wg *sync.WaitGroup, ctx context.Context, chatApp port.ChatApp) *Server {
 	server := &Server{
+		wg:       wg,
+		ctx:      ctx,
+		chatApp:  chatApp,
 		rooms:    make(map[int][]interface{}),
 		msgChan:  make(chan *MsgRes),
 		roomChan: make(chan roomReq),
-		chatApp:  chatApp,
 	}
+	wg.Add(1)
 	go server.handleMsg() // TODO: need to find a way to close it gracefully + make this as a worker pool
 	return server
 }
@@ -68,6 +76,7 @@ func (s *Server) ChatService(stream ChatService_ChatServiceServer) error {
 
 //! --------------------- (2) handleMsg ---------------------
 func (s *Server) handleMsg() {
+	defer s.wg.Done()
 	for {
 		select {
 		case roomReq := <-s.roomChan:
@@ -83,6 +92,13 @@ func (s *Server) handleMsg() {
 			}
 		case msg := <-s.msgChan:
 			s.broadcastMsg(msg)
+		case <-s.ctx.Done():
+			for i := 0; i < 3; i++ {
+				time.Sleep(time.Second * 1)
+				log.Println("closing")
+			}
+			log.Println("finished")
+			return
 		}
 	}
 }
