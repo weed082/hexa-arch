@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
 	"google.golang.org/grpc"
 )
 
@@ -30,7 +31,7 @@ func runClient(wg sync.WaitGroup) {
 		log.Fatalf("could not connect to: %s", err)
 	}
 	defer conn.Close()
-	client := chat.NewChatServiceClient(conn)
+	client := pb.NewChatServiceClient(conn)
 	stream, err := client.ChatService(context.Background())
 	if err != nil {
 		log.Fatalf("response error: %s", err)
@@ -40,19 +41,19 @@ func runClient(wg sync.WaitGroup) {
 	sendMessage(stream)
 }
 
-func sendMessage(stream chat.ChatService_ChatServiceClient) {
+func sendMessage(stream pb.ChatService_ChatServiceClient) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		var msg *chat.MsgReq
+		var msg *pb.MsgReq
 		switch scanner.Text() {
 		case "create":
-			msg = &chat.MsgReq{Request: chat.CREATE_ROOM_REQ, UserIdx: userIdx}
+			msg = &pb.MsgReq{Request: chat.CREATE_ROOM_REQ, UserIdx: userIdx}
 		case "join":
-			msg = &chat.MsgReq{Request: chat.JOIN_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
+			msg = &pb.MsgReq{Request: chat.JOIN_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
 		case "exit":
-			msg = &chat.MsgReq{Request: chat.EXIT_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
+			msg = &pb.MsgReq{Request: chat.EXIT_ROOM_REQ, RoomIdx: 1, UserIdx: userIdx}
 		default:
-			msg = &chat.MsgReq{Request: chat.TEXT_MSG_REQ, RoomIdx: 1, UserIdx: userIdx, Body: scanner.Text()}
+			msg = &pb.MsgReq{Request: chat.TEXT_MSG_REQ, RoomIdx: 1, UserIdx: userIdx, Body: scanner.Text()}
 		}
 		err := stream.Send(msg)
 		if err != nil {
@@ -62,7 +63,7 @@ func sendMessage(stream chat.ChatService_ChatServiceClient) {
 	}
 }
 
-func receiveMessage(stream chat.ChatService_ChatServiceClient) {
+func receiveMessage(stream pb.ChatService_ChatServiceClient) {
 	for {
 		message, err := stream.Recv()
 		if err != nil {

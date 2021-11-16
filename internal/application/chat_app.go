@@ -1,6 +1,7 @@
 package application
 
 import (
+	"errors"
 	"log"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
@@ -16,32 +17,37 @@ func NewChatApp(repo port.ChatRepo) *ChatApp {
 	}
 }
 
-func (chatApp *ChatApp) CreateRoom(client interface{}, rooms map[int][]interface{}) (int, error) {
+func (chatApp *ChatApp) CreateRoom(client port.Client, rooms map[int][]port.Client) (int, error) {
 	roomIdx, err := chatApp.repo.CreateRoom()
 	if err != nil {
 		return 0, err
 	}
-	rooms[roomIdx] = []interface{}{client}
+	rooms[roomIdx] = []port.Client{client}
 	log.Printf("room idx: %d, client count: %d", roomIdx, len(rooms))
 	return roomIdx, nil
 }
 
-func (chatApp *ChatApp) RemoveRoom(roomIdx int, rooms map[int][]interface{}) error {
+func (chatApp *ChatApp) RemoveRoom(roomIdx int, rooms map[int][]port.Client) error {
 	return nil
 }
 
-func (chatApp *ChatApp) JoinRoom(client interface{}, clients []interface{}) error {
+func (chatApp *ChatApp) JoinRoom(client port.Client, clients []port.Client) error {
 	clients = append(clients, client)
 	log.Printf("client count: %d", len(clients))
 	return nil
 }
 
-func (chatApp *ChatApp) ExitRoom(roomIdx, userIdx, removeIdx int, rooms map[int][]interface{}) error {
+func (chatApp *ChatApp) ExitRoom(roomIdx, userIdx int, rooms map[int][]port.Client) error {
 	clients := rooms[roomIdx]
-	clients = append(clients[:removeIdx], clients[removeIdx+1:]...)
-	if len(clients) == 0 {
-		delete(rooms, roomIdx)
+	for index, client := range clients {
+		if client.GetUserIdx() != userIdx {
+			continue
+		}
+		clients = append(clients[:index], clients[index+1:]...)
+		if len(clients) == 0 {
+			delete(rooms, roomIdx)
+		}
+		return nil
 	}
-	log.Printf("exit user : %d, room count: %d", userIdx, len(rooms))
-	return nil
+	return errors.New("no match user idx in the chat room")
 }

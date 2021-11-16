@@ -1,11 +1,15 @@
 package port
 
 //! ChatApp
+type Client interface {
+	GetUserIdx() int
+}
+
 type ChatApp interface {
-	CreateRoom(client interface{}, rooms map[int][]interface{}) (int, error)
-	RemoveRoom(roomIdx int, rooms map[int][]interface{}) error
-	JoinRoom(client interface{}, clients []interface{}) error
-	ExitRoom(roomIdx, userIdx, removeIdx int, rooms map[int][]interface{}) error
+	CreateRoom(client Client, rooms map[int][]Client) (int, error)
+	RemoveRoom(roomIdx int, rooms map[int][]Client) error
+	JoinRoom(client Client, clients []Client) error
+	ExitRoom(roomIdx, userIdx int, rooms map[int][]Client) error
 }
 
 //!  User

@@ -6,6 +6,7 @@ import (
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/core"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 	"google.golang.org/grpc"
 )
@@ -31,6 +32,6 @@ func (g *Grpc) Run(port string) {
 	defer listener.Close()
 	g.Server = grpc.NewServer()
 	chatServer := chat.NewServer(g.wp, g.chatApp)
-	chat.RegisterChatServiceServer(g.Server, chatServer) // register chat server
-	log.Println(g.Server.Serve(listener))                // serve grpc server
+	pb.RegisterChatServiceServer(g.Server, chatServer) // register chat server
+	log.Println(g.Server.Serve(listener))              // serve grpc server
 }

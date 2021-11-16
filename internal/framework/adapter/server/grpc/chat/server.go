@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/core"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
@@ -16,14 +17,9 @@ const (
 	IMAGE_MSG_REQ   = 5
 )
 
-type client struct {
-	userIdx int
-	stream  ChatService_ChatServiceServer
-}
-
 type Server struct {
 	wp      *core.WorkerPool
-	rooms   map[int][]interface{}
+	rooms   map[int][]port.Client
 	chatApp port.ChatApp
 }
 
@@ -31,13 +27,13 @@ func NewServer(wp *core.WorkerPool, chatApp port.ChatApp) *Server {
 	server := &Server{
 		wp:      wp,
 		chatApp: chatApp,
-		rooms:   make(map[int][]interface{}),
+		rooms:   make(map[int][]port.Client),
 	}
 	return server
 }
 
 //! --------------------- (1) grpc request ---------------------
-func (s *Server) ChatService(stream ChatService_ChatServiceServer) error {
+func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -49,63 +45,56 @@ func (s *Server) ChatService(stream ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.wp.RegisterJobCallback(core.Job{Callback: s.createRoom(client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJobCallback(core.Job{Callback: s.createRoom(Client{int(msg.UserIdx), stream})})
 		case JOIN_ROOM_REQ:
-			s.wp.RegisterJobCallback(core.Job{Callback: s.joinRoom(int(msg.RoomIdx), client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJobCallback(core.Job{Callback: s.joinRoom(int(msg.RoomIdx), Client{int(msg.UserIdx), stream})})
 		case EXIT_ROOM_REQ:
 			s.wp.RegisterJobCallback(core.Job{Callback: s.exitRoom(int(msg.RoomIdx), int(msg.UserIdx))})
 		case TEXT_MSG_REQ:
-			s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
+			s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
 		}
 	}
 }
 
 //! ----------- 1) chat room -----------
-func (s *Server) createRoom(c client) func() {
+func (s *Server) createRoom(c Client) func() {
 	return func() {
 		roomIdx, err := s.chatApp.CreateRoom(c, s.rooms)
 		if err != nil {
 			log.Printf("create room error : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx)})})
+		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx)})})
 	}
 }
 
-func (s *Server) joinRoom(roomIdx int, c client) func() {
+func (s *Server) joinRoom(roomIdx int, c Client) func() {
 	return func() {
 		err := s.chatApp.JoinRoom(c, s.rooms[roomIdx])
 		if err != nil {
 			log.Printf("join room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)})})
+		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)})})
 	}
 }
 
 func (s *Server) exitRoom(roomIdx, userIdx int) func() {
 	return func() {
-		for index, participant := range s.rooms[roomIdx] {
-			if userIdx != participant.(client).userIdx {
-				continue
-			}
-			err := s.chatApp.ExitRoom(roomIdx, userIdx, index, s.rooms)
-			if err != nil {
-				log.Printf("exit room err : %s", err) // TODO: need to send an error to client
-				return
-			}
-			s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})})
+		err := s.chatApp.ExitRoom(roomIdx, userIdx, s.rooms)
+		if err != nil {
+			log.Printf("exit room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		log.Println("exit room error : no match client in this room") // TODO: need to send an error to client
+		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})})
 	}
 }
 
 //! ----------- 2) broadcast -----------
-func (s *Server) broadcastMsg(msg *MsgRes) func() {
+func (s *Server) broadcastMsg(msg *pb.MsgRes) func() {
 	return func() {
 		for _, c := range s.rooms[int(msg.RoomIdx)] {
-			err := c.(client).stream.Send(msg)
+			err := c.(Client).stream.Send(msg)
 			if err != nil {
 				log.Printf("sending message error: %s", err)
 				continue
