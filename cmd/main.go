@@ -38,7 +38,7 @@ var (
 )
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	log.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
 	wp.Generate(10)
@@ -78,10 +78,10 @@ func runGrpc() {
 
 //! shutdown rest, grpc gracefully + close db
 func gracefulShutdown() {
-	ctx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, restCancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
 	defer mysqlDB.Disconnect()
 	defer mongoDB.Disconnect()
-	defer cancelFunc()
+	defer restCancelFunc()
 	if err := Rest.Server.Shutdown(ctx); err != nil {
 		log.Printf("shutting down rest server failed: %s", err)
 	}
