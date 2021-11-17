@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/core"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/concurrency"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mongo_db"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mysql"
@@ -33,13 +33,13 @@ var (
 	// worker pool
 	wg              = &sync.WaitGroup{}
 	ctx, cancelFunc = context.WithCancel(context.Background())
-	wp              = core.NewWorkerPool(wg, ctx, make(chan core.Job), make(chan core.Job))
+	wp              = concurrency.NewWorkerPool(wg, ctx, make(chan concurrency.Job), make(chan concurrency.Job))
 )
 
 func main() {
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
-	wp.Generate(3)
+	wp.Generate(1)
 
 	go runRest()
 	go runGrpc()

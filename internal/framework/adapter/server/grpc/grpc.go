@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/core"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/concurrency"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
@@ -13,11 +13,11 @@ import (
 
 type Grpc struct {
 	Server  *grpc.Server
-	wp      *core.WorkerPool
+	wp      *concurrency.WorkerPool
 	chatApp port.ChatApp
 }
 
-func NewServer(wp *core.WorkerPool, chatApp port.ChatApp) *Grpc {
+func NewServer(wp *concurrency.WorkerPool, chatApp port.ChatApp) *Grpc {
 	return &Grpc{
 		wp:      wp,
 		chatApp: chatApp,

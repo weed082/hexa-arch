@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/core"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/concurrency"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
@@ -18,22 +18,24 @@ const (
 )
 
 type Server struct {
-	wp      *core.WorkerPool
+	wp      *concurrency.WorkerPool
 	rooms   map[int][]port.Client
 	chatApp port.ChatApp
 }
 
-func NewServer(wp *core.WorkerPool, chatApp port.ChatApp) *Server {
+func NewServer(wp *concurrency.WorkerPool, chatApp port.ChatApp) *Server {
 	server := &Server{
 		wp:      wp,
 		chatApp: chatApp,
 		rooms:   make(map[int][]port.Client),
 	}
+	server.rooms[1] = []port.Client{}
 	return server
 }
 
 //! --------------------- (1) grpc request ---------------------
 func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
+	s.wp.RegisterJobCallback(concurrency.Job{Callback: s.joinRoom(1, Client{1, stream})})
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -45,13 +47,13 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.wp.RegisterJobCallback(core.Job{Callback: s.createRoom(Client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJobCallback(concurrency.Job{Callback: s.createRoom(Client{int(msg.UserIdx), stream})})
 		case JOIN_ROOM_REQ:
-			s.wp.RegisterJobCallback(core.Job{Callback: s.joinRoom(int(msg.RoomIdx), Client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJobCallback(concurrency.Job{Callback: s.joinRoom(int(msg.RoomIdx), Client{int(msg.UserIdx), stream})})
 		case EXIT_ROOM_REQ:
-			s.wp.RegisterJobCallback(core.Job{Callback: s.exitRoom(int(msg.RoomIdx), int(msg.UserIdx))})
+			s.wp.RegisterJobCallback(concurrency.Job{Callback: s.exitRoom(int(msg.RoomIdx), int(msg.UserIdx))})
 		case TEXT_MSG_REQ:
-			s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
+			s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
 		}
 	}
 }
@@ -64,18 +66,18 @@ func (s *Server) createRoom(c Client) func() {
 			log.Printf("create room error : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx)})})
+		s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx)})})
 	}
 }
 
 func (s *Server) joinRoom(roomIdx int, c Client) func() {
 	return func() {
-		err := s.chatApp.JoinRoom(c, s.rooms[roomIdx])
+		err := s.chatApp.JoinRoom(roomIdx, c, s.rooms)
 		if err != nil {
 			log.Printf("join room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)})})
+		s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)})})
 	}
 }
 
@@ -86,7 +88,7 @@ func (s *Server) exitRoom(roomIdx, userIdx int) func() {
 			log.Printf("exit room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.wp.RegisterJobCallback(core.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})})
+		s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})})
 	}
 }
 
