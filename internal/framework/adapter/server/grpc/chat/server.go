@@ -3,8 +3,6 @@ package chat
 import (
 	"io"
 	"log"
-	"math/rand"
-	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/concurrency"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
@@ -73,15 +71,15 @@ func (s *Server) createRoom(c Client) func() {
 }
 
 func (s *Server) joinRoom(roomIdx int, c Client) func() {
+	log.Printf("current : %v", s.rooms)
 	return func() {
-		m := rand.Intn(4)
-		time.Sleep(time.Duration(m) * time.Second)
+		log.Printf("channel: %v", s.rooms)
 		err := s.chatApp.JoinRoom(roomIdx, c, s.rooms)
 		if err != nil {
 			log.Printf("join room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		// s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)})})
+		s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsg(&pb.MsgRes{RoomIdx: 1, UserIdx: 1})})
 	}
 }
 
@@ -99,6 +97,7 @@ func (s *Server) exitRoom(roomIdx, userIdx int) func() {
 //! ----------- 2) broadcast -----------
 func (s *Server) broadcastMsg(msg *pb.MsgRes) func() {
 	return func() {
+		log.Println(len(s.rooms[1]))
 		for _, c := range s.rooms[int(msg.RoomIdx)] {
 			err := c.(Client).stream.Send(msg)
 			if err != nil {

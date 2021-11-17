@@ -21,7 +21,7 @@ import (
 
 const (
 	DB_DRIVER      = "mysql"
-	DB_SOURCE_NAME = "root:Admin123@/test"
+	DB_SOURCE_NAME = "root:Admin123@/go_arch"
 )
 
 var (

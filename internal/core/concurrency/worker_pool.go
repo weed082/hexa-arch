@@ -7,10 +7,6 @@ import (
 	"sync"
 )
 
-type Job struct {
-	Callback func()
-}
-
 type WorkerPool struct {
 	wg         *sync.WaitGroup
 	ctx        context.Context
@@ -38,9 +34,7 @@ func (c WorkerPool) Generate(count int) {
 func (c WorkerPool) work() {
 	defer c.wg.Done()
 	for job := range c.jobChan {
-		log.Println("worker started the work")
 		job.Callback()
-		log.Println("worker finished the work")
 	}
 	log.Println("worker destroyed")
 }
