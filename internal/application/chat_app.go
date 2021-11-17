@@ -32,9 +32,8 @@ func (chatApp *ChatApp) RemoveRoom(roomIdx int, rooms map[int][]port.Client) err
 }
 
 func (chatApp *ChatApp) JoinRoom(roomIdx int, client port.Client, rooms map[int][]port.Client) error {
-	clients := rooms[roomIdx]
-	clients = append(clients, client)
-	log.Printf("client count: %d", len(clients))
+	rooms[roomIdx] = append(rooms[roomIdx], client)
+	log.Printf("client count: %d", len(rooms[roomIdx]))
 	return nil
 }
 
