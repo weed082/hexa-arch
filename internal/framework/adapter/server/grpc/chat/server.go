@@ -23,24 +23,30 @@ const (
 )
 
 type Server struct {
-	wp      *concurrency.WorkerPool
-	rooms   map[int][]port.Client
-	chatApp port.ChatApp
+	wp          *concurrency.WorkerPool
+	rooms       map[int][]port.Client
+	chatApp     port.ChatApp
+	roomPoolIdx int
+	msgPoolIdx  int
 }
 
 func NewServer(wp *concurrency.WorkerPool, chatApp port.ChatApp) *Server {
-	server := &Server{
-		wp:      wp,
-		chatApp: chatApp,
-		rooms:   make(map[int][]port.Client),
+	s := &Server{
+		wp:          wp,
+		chatApp:     chatApp,
+		rooms:       make(map[int][]port.Client),
+		roomPoolIdx: wp.AddPool(1),
+		msgPoolIdx:  wp.AddPool(1),
 	}
-	server.rooms[1] = []port.Client{}
-	return server
+	log.Printf("room pool : %d", s.roomPoolIdx)
+	log.Printf("msg pool : %d", s.msgPoolIdx)
+	s.rooms[1] = []port.Client{}
+	return s
 }
 
 //! --------------------- (1) grpc request ---------------------
 func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
-	s.wp.RegisterJobCallback(concurrency.Job{Callback: s.joinRoomJob(1, Client{1, stream})})
+	s.wp.RegisterJob(s.roomPoolIdx, concurrency.Job{Callback: s.joinRoomJob(1, Client{1, stream})})
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -52,13 +58,15 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.wp.RegisterJobCallback(concurrency.Job{Callback: s.createRoomJob(Client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJob(s.roomPoolIdx, concurrency.Job{Callback: s.createRoomJob(Client{int(msg.UserIdx), stream})})
 		case JOIN_ROOM_REQ:
-			s.wp.RegisterJobCallback(concurrency.Job{Callback: s.joinRoomJob(int(msg.RoomIdx), Client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJob(s.roomPoolIdx, concurrency.Job{Callback: s.joinRoomJob(int(msg.RoomIdx), Client{int(msg.UserIdx), stream})})
 		case EXIT_ROOM_REQ:
-			s.wp.RegisterJobCallback(concurrency.Job{Callback: s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx))})
+			s.wp.RegisterJob(s.roomPoolIdx, concurrency.Job{Callback: s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx))})
+			// s.wp.RegisterJobCallback(concurrency.Job{Callback: s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx))})
 		case TEXT_MSG_REQ:
-			s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsgJob(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
+			s.wp.RegisterJob(s.msgPoolIdx, concurrency.Job{Callback: s.broadcastMsgJob(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
+			// s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsgJob(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
 		}
 	}
 }

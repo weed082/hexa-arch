@@ -34,14 +34,14 @@ var (
 	// worker pool
 	wg              = &sync.WaitGroup{}
 	ctx, cancelFunc = context.WithCancel(context.Background())
-	wp              = concurrency.NewWorkerPool(wg, ctx, make(chan concurrency.Job), make(chan concurrency.Job))
+
+	wp = concurrency.NewWorkerPool(wg, ctx)
 )
 
 func main() {
 	log.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
-	wp.Generate(10)
 
 	go runRest()
 	go runGrpc()
