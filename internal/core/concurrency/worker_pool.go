@@ -36,7 +36,6 @@ func (wp *WorkerPool) Start() {
 			log.Println("closed all job channels")
 			return
 		default:
-			log.Println(wp.ingestCases)
 			chosenIdx, job, ok := reflect.Select(wp.ingestCases)
 			if !ok {
 				log.Println("received at closing chan")
