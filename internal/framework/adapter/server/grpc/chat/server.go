@@ -7,12 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/concurrency"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
-
-var m = sync.Mutex{}
 
 const (
 	CREATE_ROOM_REQ = 1
@@ -23,30 +20,24 @@ const (
 )
 
 type Server struct {
-	wp          *concurrency.WorkerPool
-	rooms       map[int][]port.Client
-	chatApp     port.ChatApp
-	roomPoolIdx int
-	msgPoolIdx  int
+	wp      port.WorkerPool
+	mtx     *sync.Mutex
+	rooms   map[int][]port.Client
+	chatApp port.ChatApp
 }
 
-func NewServer(wp *concurrency.WorkerPool, chatApp port.ChatApp) *Server {
+func NewServer(wp port.WorkerPool, chatApp port.ChatApp) *Server {
 	s := &Server{
-		wp:          wp,
-		chatApp:     chatApp,
-		rooms:       make(map[int][]port.Client),
-		roomPoolIdx: wp.AddPool(1),
-		msgPoolIdx:  wp.AddPool(1),
+		wp:      wp,
+		mtx:     &sync.Mutex{},
+		rooms:   make(map[int][]port.Client),
+		chatApp: chatApp,
 	}
-	log.Printf("room pool : %d", s.roomPoolIdx)
-	log.Printf("msg pool : %d", s.msgPoolIdx)
-	s.rooms[1] = []port.Client{}
 	return s
 }
 
 //! --------------------- (1) grpc request ---------------------
 func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
-	s.wp.RegisterJob(s.roomPoolIdx, concurrency.Job{Callback: s.joinRoomJob(1, Client{1, stream})})
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -58,15 +49,13 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.wp.RegisterJob(s.roomPoolIdx, concurrency.Job{Callback: s.createRoomJob(Client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJob(s.createRoomJob(Client{int(msg.UserIdx), stream}))
 		case JOIN_ROOM_REQ:
-			s.wp.RegisterJob(s.roomPoolIdx, concurrency.Job{Callback: s.joinRoomJob(int(msg.RoomIdx), Client{int(msg.UserIdx), stream})})
+			s.wp.RegisterJob(s.joinRoomJob(int(msg.RoomIdx), Client{int(msg.UserIdx), stream}))
 		case EXIT_ROOM_REQ:
-			s.wp.RegisterJob(s.roomPoolIdx, concurrency.Job{Callback: s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx))})
-			// s.wp.RegisterJobCallback(concurrency.Job{Callback: s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx))})
+			s.wp.RegisterJob(s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx)))
 		case TEXT_MSG_REQ:
-			s.wp.RegisterJob(s.msgPoolIdx, concurrency.Job{Callback: s.broadcastMsgJob(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
-			// s.wp.RegisterJobCallback(concurrency.Job{Callback: s.broadcastMsgJob(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body})})
+			s.wp.RegisterJob(s.broadcastMsgJob(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body}))
 		}
 	}
 }
@@ -74,7 +63,7 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 //! ----------- 1) chat room -----------
 func (s *Server) createRoomJob(c Client) func() {
 	return func() {
-		roomIdx, err := s.chatApp.CreateRoom(c, s.rooms)
+		roomIdx, err := s.chatApp.CreateRoom(s.mtx, c, s.rooms)
 		if err != nil {
 			log.Printf("create room error : %s", err) // TODO: need to send an error to client
 			return
@@ -87,21 +76,19 @@ func (s *Server) joinRoomJob(roomIdx int, c Client) func() {
 	return func() {
 		log.Printf("count: %v", len(s.rooms[1]))
 		time.Sleep(time.Duration(rand.Int31n(5)) * time.Microsecond)
-		m.Lock()
-		err := s.chatApp.JoinRoom(roomIdx, c, s.rooms)
-		m.Unlock()
+		err := s.chatApp.JoinRoom(s.mtx, roomIdx, c, s.rooms)
 
 		if err != nil {
 			log.Printf("join room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		// s.broadcastMsg(&pb.MsgRes{RoomIdx: 1, UserIdx: 1})
+		s.broadcastMsg(&pb.MsgRes{RoomIdx: 1, UserIdx: 1})
 	}
 }
 
 func (s *Server) exitRoomJob(roomIdx, userIdx int) func() {
 	return func() {
-		err := s.chatApp.ExitRoom(roomIdx, userIdx, s.rooms)
+		err := s.chatApp.ExitRoom(s.mtx, roomIdx, userIdx, s.rooms)
 		if err != nil {
 			log.Printf("exit room err : %s", err) // TODO: need to send an error to client
 			return

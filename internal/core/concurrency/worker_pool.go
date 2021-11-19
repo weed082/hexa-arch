@@ -2,81 +2,59 @@ package concurrency
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"reflect"
 	"sync"
 )
 
 type WorkerPool struct {
-	wg          *sync.WaitGroup
-	ctx         context.Context
-	jobChs      []chan Job
-	ingestChs   []chan Job
-	ingestCases []reflect.SelectCase
+	wg       *sync.WaitGroup
+	ctx      context.Context
+	jobCh    chan Job
+	ingestCh chan Job
 }
 
-func NewWorkerPool(wg *sync.WaitGroup, ctx context.Context) *WorkerPool {
+func NewWorkerPool(wg *sync.WaitGroup, ctx context.Context, jobChan chan Job, ingestChan chan Job) *WorkerPool {
 	return &WorkerPool{
-		wg:          wg,
-		ctx:         ctx,
-		jobChs:      []chan Job{},
-		ingestChs:   []chan Job{},
-		ingestCases: []reflect.SelectCase{},
+		wg:       wg,
+		ctx:      ctx,
+		jobCh:    jobChan,
+		ingestCh: ingestChan,
 	}
 }
 
-func (wp *WorkerPool) Start() {
-	for {
-		select {
-		case <-wp.ctx.Done():
-			log.Println("close signal received, closing job channels")
-			for _, ch := range wp.jobChs {
-				close(ch)
-			}
-			log.Println("closed all job channels")
-			return
-		default:
-			chosenIdx, job, ok := reflect.Select(wp.ingestCases)
-			if !ok {
-				log.Println("received at closing chan")
-				continue
-			}
-			log.Println("job send")
-			wp.jobChs[chosenIdx] <- job.Interface().(Job)
-		}
+//! (1) generate worker
+func (c *WorkerPool) Generate(count int) {
+	c.wg.Add(count)
+	for i := 0; i < count; i++ {
+		go c.work()
 	}
 }
 
-func (wp *WorkerPool) AddPool(workerCnt int) int {
-	newPoolIdx := len(wp.jobChs) // new pool index
-	ingestCh := make(chan Job)
-
-	// add job, ingest channels
-	wp.ingestCases = append(wp.ingestCases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ingestCh)})
-	wp.ingestChs = append(wp.ingestChs, ingestCh)
-	wp.jobChs = append(wp.jobChs, make(chan Job))
-	log.Println(wp.ingestChs)
-
-	// start workers
-	wp.wg.Add(workerCnt)
-	for i := 0; i < workerCnt; i++ {
-		go wp.work(newPoolIdx)
-	}
-	return newPoolIdx
-}
-
-func (wp *WorkerPool) work(poolIdx int) {
-	defer wp.wg.Done()
-	log.Println(wp.jobChs[poolIdx])
-	for job := range wp.jobChs[poolIdx] {
-		log.Println("working")
+func (c *WorkerPool) work() {
+	defer c.wg.Done()
+	for job := range c.jobCh {
 		job.Callback()
 	}
 	log.Println("worker destroyed")
 }
 
-func (wp *WorkerPool) RegisterJob(poolIdx int, job Job) {
-	log.Println("registered")
-	log.Println(wp.ingestChs[poolIdx])
-	wp.ingestChs[poolIdx] <- job
+//! (2) start worker pool
+func (c *WorkerPool) Start() {
+	for {
+		select {
+		case job := <-c.ingestCh:
+			c.jobCh <- job
+		case <-c.ctx.Done():
+			fmt.Println("Consumer received cancellation signal, closing jobChan")
+			close(c.jobCh)
+			fmt.Println("Consumer closed jobsChan")
+			return
+		}
+	}
+}
+
+//! (3) register event callback
+func (c *WorkerPool) RegisterJob(callback func()) {
+	c.ingestCh <- Job{callback}
 }

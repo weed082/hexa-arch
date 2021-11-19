@@ -1,11 +1,13 @@
 package port
 
+import "sync"
+
 //! ChatApp
 type ChatApp interface {
-	CreateRoom(client Client, rooms map[int][]Client) (int, error)
-	RemoveRoom(roomIdx int, rooms map[int][]Client) error
-	JoinRoom(roomIdx int, client Client, rooms map[int][]Client) error
-	ExitRoom(roomIdx, userIdx int, rooms map[int][]Client) error
+	CreateRoom(mtx *sync.Mutex, client Client, rooms map[int][]Client) (int, error)
+	RemoveRoom(mtx *sync.Mutex, roomIdx int, rooms map[int][]Client) error
+	JoinRoom(mtx *sync.Mutex, roomIdx int, client Client, rooms map[int][]Client) error
+	ExitRoom(mtx *sync.Mutex, roomIdx, userIdx int, rooms map[int][]Client) error
 }
 
 type Client interface {

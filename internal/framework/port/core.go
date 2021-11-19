@@ -1,5 +1,5 @@
 package port
 
 type WorkerPool interface {
-	Generate(count int)
+	RegisterJob(callback func())
 }
