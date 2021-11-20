@@ -1,20 +1,23 @@
 package port
 
-import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
-
 //! 1. Chat
 type Chat interface {
 	CreateRoom(client Client) (int, error)
 	JoinRoom(roomIdx int, client Client) error
 	ExitRoom(roomIdx, userIdx int) error
 	ExitAllRooms(roomIdxs *[]int, client Client)
-	BroadcastMsg(*pb.MsgRes)
+	BroadcastMsg(msg Message)
 }
 
 //** (1) chat client
 type Client interface {
 	GetUserIdx() int
-	SendMsg(msg *pb.MsgRes) error
+	SendMsg(msg interface{}) error
+}
+
+//* (2) message
+type Message interface {
+	GetRoomIdx() int
 }
 
 //!  2. User

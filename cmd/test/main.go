@@ -2,13 +2,20 @@ package main
 
 import "log"
 
-func main() {
-	s := &[]int{}
-	slice(s)
-	log.Printf("slice address %p, slice value %v", s, s)
+type child struct {
+	userIdx int
+}
+type parent struct {
+	child *child
 }
 
-func slice(s *[]int) {
-	*s = append(*s, 1)
-	log.Println(s)
+func main() {
+	child := &child{1}
+	parent := &parent{child: child}
+	log.Printf("%p", &parent.child)
+	slice(parent)
+}
+
+func slice(parent *parent) {
+	log.Printf("%p", &parent.child)
 }

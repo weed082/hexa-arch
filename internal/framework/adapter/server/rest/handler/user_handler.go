@@ -2,18 +2,23 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/core/router"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
 type UserHandler struct {
-	app port.User
+	logger *log.Logger
+	app    port.User
 }
 
-func NewUserHandler(app port.User) *UserHandler {
-	return &UserHandler{app}
+func NewUserHandler(logger *log.Logger, app port.User) *UserHandler {
+	return &UserHandler{
+		logger: logger,
+		app:    app,
+	}
 }
 
 func (handler *UserHandler) Register(r *router.Router) {

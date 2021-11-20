@@ -8,26 +8,29 @@ import (
 )
 
 type Mysql struct {
-	db *sql.DB
+	logger *log.Logger
+	db     *sql.DB
 }
 
-func NewMysql(driverName, dataSourceName string) *Mysql {
+func NewMysql(logger *log.Logger, driverName, dataSourceName string) *Mysql {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
-		log.Fatalf("db connection failure: %v", err)
+		logger.Fatalf("db connection failure: %v", err)
 	}
-
 	err = db.Ping()
 	if err != nil {
-		log.Fatalf("db ping failure: %v", err)
+		logger.Fatalf("db ping failure: %v", err)
 	}
-	return &Mysql{db: db}
+	return &Mysql{
+		logger: logger,
+		db:     db,
+	}
 }
 
 // disconnect to mongoDB
-func (mysql *Mysql) Disconnect() {
-	err := mysql.db.Close()
+func (sql *Mysql) Disconnect() {
+	err := sql.db.Close()
 	if err != nil {
-		log.Fatalf("db close failure: %v", err)
+		sql.logger.Fatalf("db close failure: %v", err)
 	}
 }

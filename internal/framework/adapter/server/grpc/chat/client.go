@@ -1,6 +1,10 @@
 package chat
 
-import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
+import (
+	"errors"
+
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
+)
 
 type Client struct {
 	userIdx int
@@ -11,6 +15,10 @@ func (c *Client) GetUserIdx() int {
 	return c.userIdx
 }
 
-func (c *Client) SendMsg(msg *pb.MsgRes) error {
-	return c.stream.Send(msg)
+func (c *Client) SendMsg(msg interface{}) error {
+	msgRes, ok := msg.(*pb.MsgRes)
+	if !ok {
+		return errors.New("type assertion to pb struct failed")
+	}
+	return c.stream.Send(msgRes)
 }

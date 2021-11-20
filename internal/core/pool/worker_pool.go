@@ -1,4 +1,4 @@
-package concurrency
+package pool
 
 import (
 	"log"
@@ -6,14 +6,16 @@ import (
 )
 
 type WorkerPool struct {
-	wg    *sync.WaitGroup
-	jobCh chan Job
+	logger *log.Logger
+	wg     *sync.WaitGroup
+	jobCh  chan func()
 }
 
-func NewWorkerPool(wg *sync.WaitGroup, jobCh chan Job) *WorkerPool {
+func NewWorkerPool(logger *log.Logger, wg *sync.WaitGroup, bufferSize int) *WorkerPool {
 	return &WorkerPool{
-		wg:    &sync.WaitGroup{},
-		jobCh: jobCh,
+		logger: logger,
+		wg:     &sync.WaitGroup{},
+		jobCh:  make(chan func(), bufferSize),
 	}
 }
 
@@ -27,14 +29,14 @@ func (wp *WorkerPool) Generate(count int) {
 
 func (wp *WorkerPool) work() {
 	defer wp.wg.Done()
-	for job := range wp.jobCh {
-		job.Callback()
+	for callback := range wp.jobCh {
+		callback()
 	}
-	log.Println("worker destroyed")
+	wp.logger.Println("worker destroyed")
 }
 
 func (wp *WorkerPool) RegisterJob(callback func()) {
-	wp.jobCh <- Job{callback}
+	wp.jobCh <- callback
 }
 
 func (wp *WorkerPool) Stop() {

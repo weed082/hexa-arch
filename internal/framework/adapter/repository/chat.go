@@ -1,14 +1,20 @@
 package repository
 
-import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
+import (
+	"log"
+
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
+)
 
 type Chat struct {
-	sql port.ChatSql
+	logger *log.Logger
+	sql    port.ChatSql
 }
 
-func NewChat(sql port.ChatSql) *Chat {
+func NewChat(logger *log.Logger, sql port.ChatSql) *Chat {
 	return &Chat{
-		sql: sql,
+		logger: logger,
+		sql:    sql,
 	}
 }
 

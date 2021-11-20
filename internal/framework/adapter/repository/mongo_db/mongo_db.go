@@ -11,13 +11,14 @@ import (
 )
 
 type MongoDB struct {
+	logger        *log.Logger
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	client        *mongo.Client
 }
 
-func NewMongoDB() *MongoDB {
-	ctx, ctxCancelFunc := context.WithTimeout(context.Background(), 5*time.Second) // repository context
+func NewMongoDB(logger *log.Logger, ctxTimeout time.Duration) *MongoDB {
+	ctx, ctxCancelFunc := context.WithTimeout(context.Background(), ctxTimeout) // repository context
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
 	if err != nil {
 		log.Fatalf("mongoDB new client failed : %v", err)
@@ -33,6 +34,7 @@ func NewMongoDB() *MongoDB {
 		log.Fatalf("mongoDB ping failed : %v", err)
 	}
 	return &MongoDB{
+		logger:        logger,
 		ctx:           ctx,
 		ctxCancelFunc: ctxCancelFunc,
 		client:        client,
@@ -40,10 +42,10 @@ func NewMongoDB() *MongoDB {
 }
 
 // disconnect to mongoDB
-func (mongoDB *MongoDB) Disconnect() {
-	err := mongoDB.client.Disconnect(mongoDB.ctx)
+func (mongo *MongoDB) Disconnect() {
+	err := mongo.client.Disconnect(mongo.ctx)
 	if err != nil {
-		log.Fatalf("mongoDB disconnect failed : %v", err)
+		mongo.logger.Fatalf("mongoDB disconnect failed : %v", err)
 	}
-	mongoDB.ctxCancelFunc()
+	mongo.ctxCancelFunc()
 }

@@ -1,13 +1,21 @@
 package application
 
-import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
+import (
+	"log"
+
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
+)
 
 type User struct {
-	repo port.UserRepo
+	logger *log.Logger
+	repo   port.UserRepo
 }
 
-func NewUser(repo port.UserRepo) *User {
-	return &User{repo}
+func NewUser(logger *log.Logger, repo port.UserRepo) *User {
+	return &User{
+		logger: logger,
+		repo:   repo,
+	}
 }
 
 func (app *User) Register() {

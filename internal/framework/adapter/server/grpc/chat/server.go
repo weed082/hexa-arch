@@ -17,12 +17,14 @@ const (
 )
 
 type Server struct {
+	logger   *log.Logger
 	chatPool port.WorkerPool
 	chatApp  port.Chat
 }
 
-func NewServer(chatPool port.WorkerPool, chatApp port.Chat) *Server {
+func NewServer(logger *log.Logger, chatPool port.WorkerPool, chatApp port.Chat) *Server {
 	return &Server{
+		logger:   logger,
 		chatPool: chatPool,
 		chatApp:  chatApp,
 	}
@@ -40,7 +42,7 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 			return nil
 		}
 		if err != nil {
-			log.Printf("receiving message err: %s", err)
+			s.logger.Printf("receiving message err: %s", err)
 			return err
 		}
 		if c.userIdx == 0 {
@@ -64,11 +66,12 @@ func (s *Server) createRoomJob(roomIdxs *[]int, c *Client) func() {
 	return func() {
 		roomIdx, err := s.chatApp.CreateRoom(c)
 		if err != nil {
-			log.Printf("create room error : %s", err) // TODO: need to send an error to client
+			s.logger.Printf("create room error : %s", err) // TODO: need to send an error to client
 			return
 		}
 		*roomIdxs = append(*roomIdxs, roomIdx)
-		s.chatApp.BroadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx)})
+		msg := &Message{&pb.MsgRes{RoomIdx: int32(roomIdx)}}
+		s.chatApp.BroadcastMsg(msg)
 	}
 }
 
@@ -77,10 +80,11 @@ func (s *Server) joinRoomJob(roomIdxs *[]int, roomIdx int, c *Client) func() {
 	return func() {
 		err := s.chatApp.JoinRoom(roomIdx, c)
 		if err != nil {
-			log.Printf("join room err : %s", err) // TODO: need to send an error to client
+			s.logger.Printf("join room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.chatApp.BroadcastMsg(&pb.MsgRes{RoomIdx: 1, UserIdx: 1})
+		msg := &Message{&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(c.userIdx)}}
+		s.chatApp.BroadcastMsg(msg)
 	}
 }
 
@@ -88,10 +92,11 @@ func (s *Server) exitRoomJob(roomIdx, userIdx int) func() {
 	return func() {
 		err := s.chatApp.ExitRoom(roomIdx, userIdx)
 		if err != nil {
-			log.Printf("exit room err : %s", err) // TODO: need to send an error to client
+			s.logger.Printf("exit room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.chatApp.BroadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})
+		msg := &Message{&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)}}
+		s.chatApp.BroadcastMsg(msg)
 	}
 }
 
@@ -104,6 +109,6 @@ func (s *Server) exitAllRooms(roomIdx *[]int, c *Client) func() {
 //! ----------- 2) broadcast -----------
 func (s *Server) broadcastMsgJob(msg *pb.MsgRes) func() {
 	return func() {
-		s.chatApp.BroadcastMsg(msg)
+		s.chatApp.BroadcastMsg(&Message{msg})
 	}
 }
