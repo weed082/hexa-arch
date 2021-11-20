@@ -11,14 +11,14 @@ import (
 )
 
 type Grpc struct {
-	Server  *grpc.Server
-	wp      port.WorkerPool
+	server  *grpc.Server
+	chatWp  port.WorkerPool
 	chatApp port.Chat
 }
 
-func NewServer(wp port.WorkerPool, chatApp port.Chat) *Grpc {
+func NewServer(chatWp port.WorkerPool, chatApp port.Chat) *Grpc {
 	return &Grpc{
-		wp:      wp,
+		chatWp:  chatWp,
 		chatApp: chatApp,
 	}
 }
@@ -28,9 +28,18 @@ func (g *Grpc) Run(port string) {
 	if err != nil {
 		log.Fatalf("failed to listen on port %s", port)
 	}
-	defer listener.Close()
-	g.Server = grpc.NewServer()
-	chatServer := chat.NewServer(g.wp, g.chatApp)
-	pb.RegisterChatServiceServer(g.Server, chatServer) // register chat server
-	log.Println(g.Server.Serve(listener))              // serve grpc server
+
+	g.server = grpc.NewServer()
+	chatServer := chat.NewServer(g.chatWp, g.chatApp)
+	pb.RegisterChatServiceServer(g.server, chatServer) // register chat server
+
+	err = g.server.Serve(listener)
+	if err != nil {
+		log.Fatalf("grpc serve error : %s", err)
+	}
+	log.Println("grpc: Server closed")
+}
+
+func (g *Grpc) Stop() {
+	g.server.GracefulStop()
 }

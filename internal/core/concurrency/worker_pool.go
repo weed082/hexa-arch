@@ -10,10 +10,10 @@ type WorkerPool struct {
 	jobCh chan Job
 }
 
-func NewWorkerPool(wg *sync.WaitGroup, buffuerSize int) *WorkerPool {
+func NewWorkerPool(wg *sync.WaitGroup, jobCh chan Job) *WorkerPool {
 	return &WorkerPool{
-		wg:    wg,
-		jobCh: make(chan Job, buffuerSize),
+		wg:    &sync.WaitGroup{},
+		jobCh: jobCh,
 	}
 }
 
@@ -37,6 +37,6 @@ func (wp *WorkerPool) RegisterJob(callback func()) {
 	wp.jobCh <- Job{callback}
 }
 
-func (wp *WorkerPool) Close() {
+func (wp *WorkerPool) Stop() {
 	close(wp.jobCh)
 }

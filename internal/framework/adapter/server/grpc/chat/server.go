@@ -17,22 +17,22 @@ const (
 )
 
 type Server struct {
-	wp      port.WorkerPool
-	chatApp port.Chat
+	chatPool port.WorkerPool
+	chatApp  port.Chat
 }
 
-func NewServer(wp port.WorkerPool, chatApp port.Chat) *Server {
+func NewServer(chatPool port.WorkerPool, chatApp port.Chat) *Server {
 	return &Server{
-		wp:      wp,
-		chatApp: chatApp,
+		chatPool: chatPool,
+		chatApp:  chatApp,
 	}
 }
 
 //! --------------------- (1) grpc request ---------------------
 func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 	c := &Client{stream: stream}
-	defer s.chatApp.ExitAllRooms(c)
-	s.wp.RegisterJob(s.joinRoomJob(1, c))
+	roomIdxs := []int{}
+	defer s.chatPool.RegisterJob(s.exitAllRooms(roomIdxs, c))
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -47,30 +47,32 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.wp.RegisterJob(s.createRoomJob(c))
+			s.chatPool.RegisterJob(s.createRoomJob(&roomIdxs, c))
 		case JOIN_ROOM_REQ:
-			s.wp.RegisterJob(s.joinRoomJob(int(msg.RoomIdx), c))
+			s.chatPool.RegisterJob(s.joinRoomJob(&roomIdxs, int(msg.RoomIdx), c))
 		case EXIT_ROOM_REQ:
-			s.wp.RegisterJob(s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx)))
+			s.chatPool.RegisterJob(s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx)))
 		case TEXT_MSG_REQ:
-			s.wp.RegisterJob(s.broadcastMsgJob(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body}))
+			s.chatPool.RegisterJob(s.broadcastMsgJob(&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body}))
 		}
 	}
 }
 
 //! ----------- 1) chat room -----------
-func (s *Server) createRoomJob(c *Client) func() {
+func (s *Server) createRoomJob(roomIdxs *[]int, c *Client) func() {
 	return func() {
 		roomIdx, err := s.chatApp.CreateRoom(c)
 		if err != nil {
 			log.Printf("create room error : %s", err) // TODO: need to send an error to client
 			return
 		}
+		*roomIdxs = append(*roomIdxs, roomIdx)
 		s.chatApp.BroadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx)})
 	}
 }
 
-func (s *Server) joinRoomJob(roomIdx int, c *Client) func() {
+func (s *Server) joinRoomJob(roomIdxs *[]int, roomIdx int, c *Client) func() {
+	*roomIdxs = append(*roomIdxs, roomIdx)
 	return func() {
 		err := s.chatApp.JoinRoom(roomIdx, c)
 		if err != nil {
@@ -89,6 +91,16 @@ func (s *Server) exitRoomJob(roomIdx, userIdx int) func() {
 			return
 		}
 		s.chatApp.BroadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})
+	}
+}
+
+func (s *Server) exitAllRooms(roomIdx []int, c *Client) func() {
+	return func() {
+		err := s.chatApp.ExitAllRooms(roomIdx, c)
+		if err != nil {
+			log.Printf("exit room err : %s", err)
+			return
+		}
 	}
 }
 

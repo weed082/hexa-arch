@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/concurrency"
@@ -32,21 +30,15 @@ var (
 	// database
 	mysqlDB = mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
 	mongoDB = mongo_db.NewMongoDB()
-	// sync
-	wg = &sync.WaitGroup{}
+	// chat wait group
+	chatWg = &sync.WaitGroup{}
 )
 
 func main() {
 	log.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
-	terminationChan := make(chan os.Signal, 1)
-	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
-
 	go runRest()
 	go runGrpc()
-
-	<-terminationChan
 	gracefulShutdown() // block until grpc and rest server finishes
-	wg.Wait()          // block until worker pool fininshes
 }
 
 //! run rest server
@@ -62,29 +54,36 @@ func runRest() {
 
 //! run grpc server
 func runGrpc() {
-	wp := concurrency.NewWorkerPool(wg, 0)
-	defer wp.Close()
-	wp.Generate(3)
+	chatPool := concurrency.NewWorkerPool(chatWg, make(chan concurrency.Job, 500))
+	defer chatPool.Stop()
+	chatPool.Generate(1)
 	// repository
 	chatRepo := repository.NewChat(mysqlDB)
 	// application
-	chatApp := application.NewChat(&sync.RWMutex{}, map[int]port.Client{}, chatRepo)
+	chatApp := application.NewChat(map[int]port.Client{}, chatRepo)
 	// grpc
-	Grpc = grpc.NewServer(wp, chatApp)
+	Grpc = grpc.NewServer(chatPool, chatApp)
 	Grpc.Run("9000")
-	log.Println("Grpc closed")
 }
 
-//! shutdown rest, grpc gracefully + close db
+//! grcefully shutdown in order
 func gracefulShutdown() {
+	//* listen exit signal from os
+	terminationChan := make(chan os.Signal, 1)
+	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
+	<-terminationChan
+
+	//* close db
 	defer mysqlDB.Disconnect()
 	defer mongoDB.Disconnect()
-	ctx, restCancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
-	defer restCancelFunc()
+
+	//* close rest server
 	log.Println("gracefully shutdown Rest") //! need to log before call graceful shutdown or race condition problem occur
-	if err := Rest.Server.Shutdown(ctx); err != nil {
-		log.Printf("shutting down rest server failed: %s", err)
-	}
+	Rest.Stop()
+
+	//* close grpc server
 	log.Println("gracefully shutdown Grpc") //! need to log before call graceful shutdown or race condition problem occur
-	Grpc.Server.GracefulStop()
+	Grpc.Stop()
+
+	chatWg.Wait() //* wait for chat pool to finish
 }
