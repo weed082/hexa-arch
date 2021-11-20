@@ -30,8 +30,8 @@ func (c *Chat) CreateRoom(client port.Client) (int, error) {
 		return 0, err
 	}
 	c.mtx.Lock()
+	defer c.mtx.Unlock()
 	c.rooms[roomIdx] = []port.Client{client}
-	c.mtx.Unlock()
 	log.Printf("room idx: %d, client count: %d", roomIdx, len(c.rooms))
 	return roomIdx, nil
 }
@@ -50,11 +50,11 @@ func (c *Chat) ExitRoom(roomIdx, userIdx int) error {
 			continue
 		}
 		c.mtx.Lock()
+		defer c.mtx.Unlock()
 		clients = append(clients[:index], clients[index+1:]...)
 		if len(clients) == 0 {
 			delete(c.rooms, roomIdx)
 		}
-		c.mtx.Unlock()
 		return nil
 	}
 	return errors.New("no match user idx in the chat room")
