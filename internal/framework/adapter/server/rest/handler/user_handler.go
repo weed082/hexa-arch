@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
@@ -21,7 +20,7 @@ func NewUserHandler(logger *log.Logger, app port.User) *UserHandler {
 	}
 }
 
-func (handler *UserHandler) Register(r *router.Router) {
+func (handler *UserHandler) Register(r port.Router) {
 	r.Get("/register/:test", handler.test)
 }
 

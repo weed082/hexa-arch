@@ -8,7 +8,6 @@ import (
 )
 
 type key int
-type middleware func(http.Handler) http.Handler
 
 const paramKey key = iota
 
@@ -21,7 +20,7 @@ type regexRoute struct {
 type Router struct {
 	routes      map[string]map[string]http.HandlerFunc
 	regexRoutes map[string][]regexRoute
-	middlewares []middleware
+	middlewares []func(http.Handler) http.Handler
 }
 
 func New() *Router {
@@ -77,9 +76,9 @@ func (router *Router) makeRegexParam(param string) string {
 }
 
 // ---------------- (3) middleware ----------------
-func (router *Router) Use(middlewares ...middleware) {
+func (router *Router) Use(middlewares ...func(http.Handler) http.Handler) {
 	if router.middlewares == nil {
-		router.middlewares = []middleware{}
+		router.middlewares = []func(http.Handler) http.Handler{}
 	}
 	router.middlewares = append(router.middlewares, middlewares...)
 }

@@ -9,8 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ByungHakNoh/hexagonal-microservice/external/pool"
+	"github.com/ByungHakNoh/hexagonal-microservice/external/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/pool"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mongo_db"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mysql"
@@ -53,8 +54,10 @@ func runRest() {
 	userRepo := repository.NewUser(logger, mysqlDB, mongoDB)
 	// application
 	userApp := application.NewUser(logger, userRepo)
+	// router
+	router := router.New()
 	// rest
-	Rest = rest.NewRestAdapter(logger, userApp)
+	Rest = rest.NewRestAdapter(logger, router, userApp)
 	Rest.Run("8080")
 }
 
