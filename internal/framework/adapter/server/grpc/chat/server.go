@@ -33,6 +33,7 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 	c := &Client{stream: stream}
 	roomIdxs := &[]int{}
 	defer s.chatPool.RegisterJob(s.exitAllRooms(roomIdxs, c))
+
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -72,7 +73,7 @@ func (s *Server) createRoomJob(roomIdxs *[]int, c *Client) func() {
 }
 
 func (s *Server) joinRoomJob(roomIdxs *[]int, roomIdx int, c *Client) func() {
-	*roomIdxs = append(*roomIdxs, roomIdx)
+	// *roomIdxs = append(*roomIdxs, roomIdx)
 	return func() {
 		err := s.chatApp.JoinRoom(roomIdx, c)
 		if err != nil {

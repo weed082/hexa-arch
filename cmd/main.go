@@ -54,7 +54,7 @@ func runRest() {
 
 //! run grpc server
 func runGrpc() {
-	chatPool := concurrency.NewWorkerPool(chatWg, make(chan concurrency.Job, 500))
+	chatPool := concurrency.NewWorkerPool(chatWg, make(chan concurrency.Job, 3000))
 	defer chatPool.Stop()
 	chatPool.Generate(1)
 	// repository

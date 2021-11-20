@@ -33,6 +33,7 @@ func (c *Chat) CreateRoom(client port.Client) (int, error) {
 
 func (c *Chat) JoinRoom(roomIdx int, client port.Client) error {
 	c.rooms[roomIdx] = append(c.rooms[roomIdx], client)
+	log.Println(len(c.rooms[roomIdx]))
 	return nil
 }
 
