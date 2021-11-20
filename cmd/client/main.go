@@ -17,7 +17,7 @@ const userIdx = 1
 
 func main() {
 	wg := sync.WaitGroup{}
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 1; i++ {
 		wg.Add(1)
 		go runClient(wg)
 	}

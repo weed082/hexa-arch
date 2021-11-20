@@ -1,7 +1,6 @@
 package concurrency
 
 import (
-	"fmt"
 	"log"
 	"sync"
 )
@@ -18,27 +17,26 @@ func NewWorkerPool(wg *sync.WaitGroup, buffuerSize int) *WorkerPool {
 	}
 }
 
-//! (1) generate worker
-func (c *WorkerPool) Generate(count int) {
-	c.wg.Add(count)
+//! (2) generate worker
+func (wp *WorkerPool) Generate(count int) {
+	wp.wg.Add(count)
 	for i := 0; i < count; i++ {
-		go c.work()
+		go wp.work()
 	}
 }
 
-func (c *WorkerPool) work() {
-	defer c.wg.Done()
-	for job := range c.jobCh {
+func (wp *WorkerPool) work() {
+	defer wp.wg.Done()
+	for job := range wp.jobCh {
 		job.Callback()
 	}
 	log.Println("worker destroyed")
 }
 
-func (c *WorkerPool) RegisterJob(callback func()) {
-	c.jobCh <- Job{callback}
+func (wp *WorkerPool) RegisterJob(callback func()) {
+	wp.jobCh <- Job{callback}
 }
 
-func (c *WorkerPool) GracefulShutdown() {
-	close(c.jobCh)
-	fmt.Println("worker pool closing jobs channel")
+func (wp *WorkerPool) Close() {
+	close(wp.jobCh)
 }

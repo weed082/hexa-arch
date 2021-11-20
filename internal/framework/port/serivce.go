@@ -8,6 +8,7 @@ type Chat interface {
 	JoinRoom(roomIdx int, client Client) error
 	ExitRoom(roomIdx, userIdx int) error
 	BroadcastMsg(*pb.MsgRes)
+	ExitAllRooms(client Client) error
 }
 
 //** (1) chat client

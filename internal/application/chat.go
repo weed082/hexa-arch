@@ -60,6 +60,23 @@ func (c *Chat) ExitRoom(roomIdx, userIdx int) error {
 	return errors.New("no match user idx in the chat room")
 }
 
+func (c *Chat) ExitAllRooms(client port.Client) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	clients := c.rooms[1]
+	for index, existClient := range clients {
+		if existClient == client {
+			log.Println("erased")
+			clients = append(clients[:index], clients[index+1:]...)
+			if len(clients) == 0 {
+				delete(c.rooms, 1)
+			}
+			log.Println(c.rooms)
+		}
+	}
+	return nil
+}
+
 //! ----------- 2) Msg -----------
 func (c *Chat) BroadcastMsg(msg *pb.MsgRes) {
 	c.mtx.RLock()

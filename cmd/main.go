@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/concurrency"
@@ -30,9 +32,8 @@ var (
 	// database
 	mysqlDB = mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
 	mongoDB = mongo_db.NewMongoDB()
-	// worker pool
+	// sync
 	wg = &sync.WaitGroup{}
-	wp = concurrency.NewWorkerPool(wg, 0)
 )
 
 func main() {
@@ -44,9 +45,8 @@ func main() {
 	go runGrpc()
 
 	<-terminationChan
-	gracefulShutdown()
-	wp.GracefulShutdown()
-	wg.Wait()
+	gracefulShutdown() // block until grpc and rest server finishes
+	wg.Wait()          // block until worker pool fininshes
 }
 
 //! run rest server
@@ -62,8 +62,8 @@ func runRest() {
 
 //! run grpc server
 func runGrpc() {
-	// wp = concurrency.NewWorkerPool(wg, 0)
-	defer wp.GracefulShutdown()
+	wp := concurrency.NewWorkerPool(wg, 0)
+	defer wp.Close()
 	wp.Generate(3)
 	// repository
 	chatRepo := repository.NewChat(mysqlDB)
@@ -72,17 +72,19 @@ func runGrpc() {
 	// grpc
 	Grpc = grpc.NewServer(wp, chatApp)
 	Grpc.Run("9000")
-	log.Println("grpc shut down")
+	log.Println("Grpc closed")
 }
 
 //! shutdown rest, grpc gracefully + close db
 func gracefulShutdown() {
-	// ctx, restCancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
 	defer mysqlDB.Disconnect()
 	defer mongoDB.Disconnect()
-	// defer restCancelFunc()
-	// if err := Rest.Server.Shutdown(ctx); err != nil {
-	// 	log.Printf("shutting down rest server failed: %s", err)
-	// }
-	// Grpc.Server.GracefulStop()
+	ctx, restCancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
+	defer restCancelFunc()
+	log.Println("gracefully shutdown Rest") //! need to log before call graceful shutdown or race condition problem occur
+	if err := Rest.Server.Shutdown(ctx); err != nil {
+		log.Printf("shutting down rest server failed: %s", err)
+	}
+	log.Println("gracefully shutdown Grpc") //! need to log before call graceful shutdown or race condition problem occur
+	Grpc.Server.GracefulStop()
 }
