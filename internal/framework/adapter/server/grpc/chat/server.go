@@ -31,7 +31,7 @@ func NewServer(chatPool port.WorkerPool, chatApp port.Chat) *Server {
 //! --------------------- (1) grpc request ---------------------
 func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 	c := &Client{stream: stream}
-	roomIdxs := []int{}
+	roomIdxs := &[]int{}
 	defer s.chatPool.RegisterJob(s.exitAllRooms(roomIdxs, c))
 	for {
 		msg, err := stream.Recv()
@@ -47,9 +47,9 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.chatPool.RegisterJob(s.createRoomJob(&roomIdxs, c))
+			s.chatPool.RegisterJob(s.createRoomJob(roomIdxs, c))
 		case JOIN_ROOM_REQ:
-			s.chatPool.RegisterJob(s.joinRoomJob(&roomIdxs, int(msg.RoomIdx), c))
+			s.chatPool.RegisterJob(s.joinRoomJob(roomIdxs, int(msg.RoomIdx), c))
 		case EXIT_ROOM_REQ:
 			s.chatPool.RegisterJob(s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx)))
 		case TEXT_MSG_REQ:
@@ -94,13 +94,9 @@ func (s *Server) exitRoomJob(roomIdx, userIdx int) func() {
 	}
 }
 
-func (s *Server) exitAllRooms(roomIdx []int, c *Client) func() {
+func (s *Server) exitAllRooms(roomIdx *[]int, c *Client) func() {
 	return func() {
-		err := s.chatApp.ExitAllRooms(roomIdx, c)
-		if err != nil {
-			log.Printf("exit room err : %s", err)
-			return
-		}
+		s.chatApp.ExitAllRooms(roomIdx, c)
 	}
 }
 

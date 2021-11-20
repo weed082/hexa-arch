@@ -7,7 +7,7 @@ type Chat interface {
 	CreateRoom(client Client) (int, error)
 	JoinRoom(roomIdx int, client Client) error
 	ExitRoom(roomIdx, userIdx int) error
-	ExitAllRooms(roomIdxs []int, client Client) error
+	ExitAllRooms(roomIdxs *[]int, client Client)
 	BroadcastMsg(*pb.MsgRes)
 }
 

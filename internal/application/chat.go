@@ -46,28 +46,27 @@ func (c *Chat) ExitRoom(roomIdx, userIdx int) error {
 		if len(clients) == 0 {
 			delete(c.rooms, roomIdx)
 		}
+		log.Printf("current clients : %d, current rooms : %d", len(clients), len(c.rooms))
 		return nil
 	}
 	return errors.New("no match user idx in the chat room")
 }
 
-func (c *Chat) ExitAllRooms(roomIdxs []int, client port.Client) error {
-	for _, roomIdx := range roomIdxs {
+func (c *Chat) ExitAllRooms(roomIdxs *[]int, client port.Client) {
+	for _, roomIdx := range *roomIdxs {
 		clients := c.rooms[roomIdx]
-		for index, existClient := range c.rooms[roomIdx] {
+		for index, existClient := range clients {
 			if existClient == client {
-				log.Printf("len : %d, index : %d", len(clients), index)
-				c.rooms[roomIdx] = append(clients[:index], clients[index+1:]...) // delete user
+				clients = append(clients[:index], clients[index+1:]...) // delete user
 
-				if len(c.rooms[roomIdx]) == 0 {
+				if len(clients) == 0 {
 					delete(c.rooms, roomIdx) // delete room
 				}
+				log.Printf("room len : %d, clients len : %d, index : %d", len(c.rooms), len(clients), index)
 				break
 			}
 		}
 	}
-
-	return nil
 }
 
 //! ----------- 2) Msg -----------
