@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/server"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
@@ -27,9 +26,9 @@ func NewRestAdapter(logger *log.Logger, router port.Router, userApp port.User) *
 }
 
 func (r *Rest) Run(port string) {
-	handler.NewUserHandler(r.logger, r.userApp).Register(r.router)
+	handler.NewUser(r.logger, r.userApp).Register(r.router)
 
-	r.server = server.New(r.router, ":"+port)
+	r.server = r.NewServer(r.router, ":"+port)
 	err := r.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		r.logger.Fatalf("rest server error: %s", err)

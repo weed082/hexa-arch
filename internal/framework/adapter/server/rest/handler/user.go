@@ -8,22 +8,22 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
-type UserHandler struct {
+type User struct {
 	logger *log.Logger
 	app    port.User
 }
 
-func NewUserHandler(logger *log.Logger, app port.User) *UserHandler {
-	return &UserHandler{
+func NewUser(logger *log.Logger, app port.User) *User {
+	return &User{
 		logger: logger,
 		app:    app,
 	}
 }
 
-func (handler *UserHandler) Register(r port.Router) {
+func (handler *User) Register(r port.Router) {
 	r.Get("/register/:test", handler.test)
 }
 
-func (handler *UserHandler) test(w http.ResponseWriter, r *http.Request) {
+func (handler *User) test(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("yes")
 }
