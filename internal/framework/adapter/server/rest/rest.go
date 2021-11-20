@@ -12,10 +12,10 @@ import (
 
 type Rest struct {
 	Server  *http.Server
-	userApp port.UserApp
+	userApp port.User
 }
 
-func NewRestAdapter(userApp port.UserApp) *Rest {
+func NewRestAdapter(userApp port.User) *Rest {
 	return &Rest{userApp: userApp}
 }
 

@@ -13,10 +13,10 @@ import (
 type Grpc struct {
 	Server  *grpc.Server
 	wp      port.WorkerPool
-	chatApp port.ChatApp
+	chatApp port.Chat
 }
 
-func NewServer(wp port.WorkerPool, chatApp port.ChatApp) *Grpc {
+func NewServer(wp port.WorkerPool, chatApp port.Chat) *Grpc {
 	return &Grpc{
 		wp:      wp,
 		chatApp: chatApp,

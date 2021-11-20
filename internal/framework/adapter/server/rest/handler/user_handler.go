@@ -9,10 +9,10 @@ import (
 )
 
 type UserHandler struct {
-	app port.UserApp
+	app port.User
 }
 
-func NewUserHandler(app port.UserApp) *UserHandler {
+func NewUserHandler(app port.User) *UserHandler {
 	return &UserHandler{app}
 }
 

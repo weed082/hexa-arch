@@ -4,7 +4,6 @@ import (
 	"io"
 	"log"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
@@ -21,23 +20,19 @@ const (
 
 type Server struct {
 	wp      port.WorkerPool
-	mtx     *sync.Mutex
-	rooms   map[int][]port.Client
-	chatApp port.ChatApp
+	chatApp port.Chat
 }
 
-func NewServer(wp port.WorkerPool, chatApp port.ChatApp) *Server {
-	s := &Server{
+func NewServer(wp port.WorkerPool, chatApp port.Chat) *Server {
+	return &Server{
 		wp:      wp,
-		mtx:     &sync.Mutex{},
-		rooms:   make(map[int][]port.Client),
 		chatApp: chatApp,
 	}
-	return s
 }
 
 //! --------------------- (1) grpc request ---------------------
 func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
+	s.wp.RegisterJob(s.joinRoomJob(1, &Client{1, stream}))
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -49,9 +44,9 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.wp.RegisterJob(s.createRoomJob(Client{int(msg.UserIdx), stream}))
+			s.wp.RegisterJob(s.createRoomJob(&Client{int(msg.UserIdx), stream}))
 		case JOIN_ROOM_REQ:
-			s.wp.RegisterJob(s.joinRoomJob(int(msg.RoomIdx), Client{int(msg.UserIdx), stream}))
+			s.wp.RegisterJob(s.joinRoomJob(int(msg.RoomIdx), &Client{int(msg.UserIdx), stream}))
 		case EXIT_ROOM_REQ:
 			s.wp.RegisterJob(s.exitRoomJob(int(msg.RoomIdx), int(msg.UserIdx)))
 		case TEXT_MSG_REQ:
@@ -61,56 +56,43 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 }
 
 //! ----------- 1) chat room -----------
-func (s *Server) createRoomJob(c Client) func() {
+func (s *Server) createRoomJob(c *Client) func() {
 	return func() {
-		roomIdx, err := s.chatApp.CreateRoom(s.mtx, c, s.rooms)
+		roomIdx, err := s.chatApp.CreateRoom(c)
 		if err != nil {
 			log.Printf("create room error : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx)})
+		s.chatApp.BroadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx)})
 	}
 }
 
-func (s *Server) joinRoomJob(roomIdx int, c Client) func() {
+func (s *Server) joinRoomJob(roomIdx int, c *Client) func() {
 	return func() {
-		log.Printf("count: %v", len(s.rooms[1]))
 		time.Sleep(time.Duration(rand.Int31n(5)) * time.Microsecond)
-		err := s.chatApp.JoinRoom(s.mtx, roomIdx, c, s.rooms)
-
+		err := s.chatApp.JoinRoom(roomIdx, c)
 		if err != nil {
 			log.Printf("join room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.broadcastMsg(&pb.MsgRes{RoomIdx: 1, UserIdx: 1})
+		s.chatApp.BroadcastMsg(&pb.MsgRes{RoomIdx: 1, UserIdx: 1})
 	}
 }
 
 func (s *Server) exitRoomJob(roomIdx, userIdx int) func() {
 	return func() {
-		err := s.chatApp.ExitRoom(s.mtx, roomIdx, userIdx, s.rooms)
+		err := s.chatApp.ExitRoom(roomIdx, userIdx)
 		if err != nil {
 			log.Printf("exit room err : %s", err) // TODO: need to send an error to client
 			return
 		}
-		s.broadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})
+		s.chatApp.BroadcastMsg(&pb.MsgRes{RoomIdx: int32(roomIdx), UserIdx: int32(userIdx)})
 	}
 }
 
 //! ----------- 2) broadcast -----------
-func (s *Server) broadcastMsg(msg *pb.MsgRes) {
-	log.Println(len(s.rooms[1]))
-	for _, c := range s.rooms[int(msg.RoomIdx)] {
-		err := c.(Client).stream.Send(msg)
-		if err != nil {
-			log.Printf("sending message error: %s", err)
-			continue
-		}
-	}
-}
-
 func (s *Server) broadcastMsgJob(msg *pb.MsgRes) func() {
 	return func() {
-		s.broadcastMsg(msg)
+		s.chatApp.BroadcastMsg(msg)
 	}
 }

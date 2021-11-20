@@ -7,6 +7,10 @@ type Client struct {
 	stream  pb.ChatService_ChatServiceServer
 }
 
-func (c Client) GetUserIdx() int {
+func (c *Client) GetUserIdx() int {
 	return c.userIdx
+}
+
+func (c *Client) SendMsg(msg *pb.MsgRes) error {
+	return c.stream.Send(msg)
 }

@@ -2,13 +2,13 @@ package repository
 
 import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 
-type UserRepo struct {
+type User struct {
 	sqlDB   port.UserSql
 	noSqlDB port.UserNoSql
 }
 
-func NewUserRepo(sqlDB port.UserSql, noSqlDB port.UserNoSql) *UserRepo {
-	return &UserRepo{
+func NewUser(sqlDB port.UserSql, noSqlDB port.UserNoSql) *User {
+	return &User{
 		sqlDB:   sqlDB,
 		noSqlDB: noSqlDB,
 	}

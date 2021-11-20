@@ -1,24 +1,23 @@
 package port
 
-import "sync"
+import "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
 
-//! ChatApp
-type ChatApp interface {
-	CreateRoom(mtx *sync.Mutex, client Client, rooms map[int][]Client) (int, error)
-	RemoveRoom(mtx *sync.Mutex, roomIdx int, rooms map[int][]Client) error
-	JoinRoom(mtx *sync.Mutex, roomIdx int, client Client, rooms map[int][]Client) error
-	ExitRoom(mtx *sync.Mutex, roomIdx, userIdx int, rooms map[int][]Client) error
+//! 1. Chat
+type Chat interface {
+	CreateRoom(client Client) (int, error)
+	JoinRoom(roomIdx int, client Client) error
+	ExitRoom(roomIdx, userIdx int) error
+	BroadcastMsg(*pb.MsgRes)
 }
 
+//** (1) chat client
 type Client interface {
 	GetUserIdx() int
+	SendMsg(msg *pb.MsgRes) error
 }
 
-//!  User
-type UserApp interface {
+//!  2. User
+type User interface {
 	Register()
 	Signin()
-}
-
-type FileApp interface {
 }

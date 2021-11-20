@@ -1,25 +1,20 @@
 package concurrency
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"sync"
 )
 
 type WorkerPool struct {
-	wg       *sync.WaitGroup
-	ctx      context.Context
-	jobCh    chan Job
-	ingestCh chan Job
+	wg    *sync.WaitGroup
+	jobCh chan Job
 }
 
-func NewWorkerPool(wg *sync.WaitGroup, ctx context.Context, jobChan chan Job, ingestChan chan Job) *WorkerPool {
+func NewWorkerPool(wg *sync.WaitGroup, buffuerSize int) *WorkerPool {
 	return &WorkerPool{
-		wg:       wg,
-		ctx:      ctx,
-		jobCh:    jobChan,
-		ingestCh: ingestChan,
+		wg:    wg,
+		jobCh: make(chan Job, buffuerSize),
 	}
 }
 
@@ -39,22 +34,11 @@ func (c *WorkerPool) work() {
 	log.Println("worker destroyed")
 }
 
-//! (2) start worker pool
-func (c *WorkerPool) Start() {
-	for {
-		select {
-		case job := <-c.ingestCh:
-			c.jobCh <- job
-		case <-c.ctx.Done():
-			fmt.Println("Consumer received cancellation signal, closing jobChan")
-			close(c.jobCh)
-			fmt.Println("Consumer closed jobsChan")
-			return
-		}
-	}
+func (c *WorkerPool) RegisterJob(callback func()) {
+	c.jobCh <- Job{callback}
 }
 
-//! (3) register event callback
-func (c *WorkerPool) RegisterJob(callback func()) {
-	c.ingestCh <- Job{callback}
+func (c *WorkerPool) GracefulShutdown() {
+	close(c.jobCh)
+	fmt.Println("worker pool closing jobs channel")
 }

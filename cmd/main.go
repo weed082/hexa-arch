@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/concurrency"
@@ -17,6 +15,7 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mysql"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
 const (
@@ -32,34 +31,30 @@ var (
 	mysqlDB = mysql.NewMysql(DB_DRIVER, DB_SOURCE_NAME)
 	mongoDB = mongo_db.NewMongoDB()
 	// worker pool
-	wg              = &sync.WaitGroup{}
-	ctx, cancelFunc = context.WithCancel(context.Background())
-
-	wp = concurrency.NewWorkerPool(wg, ctx, make(chan concurrency.Job), make(chan concurrency.Job))
+	wg = &sync.WaitGroup{}
+	wp = concurrency.NewWorkerPool(wg, 0)
 )
 
 func main() {
 	log.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
 	terminationChan := make(chan os.Signal, 1)
 	signal.Notify(terminationChan, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
-	wp.Generate(3)
 
 	go runRest()
 	go runGrpc()
-	go wp.Start()
 
 	<-terminationChan
-	cancelFunc()
 	gracefulShutdown()
+	wp.GracefulShutdown()
 	wg.Wait()
 }
 
 //! run rest server
 func runRest() {
 	// repository
-	userRepo := repository.NewUserRepo(mysqlDB, mongoDB)
+	userRepo := repository.NewUser(mysqlDB, mongoDB)
 	// application
-	userApp := application.NewUserApp(userRepo)
+	userApp := application.NewUser(userRepo)
 	// rest
 	Rest = rest.NewRestAdapter(userApp)
 	Rest.Run("8080")
@@ -67,10 +62,13 @@ func runRest() {
 
 //! run grpc server
 func runGrpc() {
+	// wp = concurrency.NewWorkerPool(wg, 0)
+	defer wp.GracefulShutdown()
+	wp.Generate(3)
 	// repository
-	chatRepo := repository.NewChatRepo(mysqlDB)
+	chatRepo := repository.NewChat(mysqlDB)
 	// application
-	chatApp := application.NewChatApp(chatRepo)
+	chatApp := application.NewChat(&sync.RWMutex{}, map[int]port.Client{}, chatRepo)
 	// grpc
 	Grpc = grpc.NewServer(wp, chatApp)
 	Grpc.Run("9000")
@@ -79,12 +77,12 @@ func runGrpc() {
 
 //! shutdown rest, grpc gracefully + close db
 func gracefulShutdown() {
-	ctx, restCancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
+	// ctx, restCancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
 	defer mysqlDB.Disconnect()
 	defer mongoDB.Disconnect()
-	defer restCancelFunc()
-	if err := Rest.Server.Shutdown(ctx); err != nil {
-		log.Printf("shutting down rest server failed: %s", err)
-	}
-	Grpc.Server.GracefulStop()
+	// defer restCancelFunc()
+	// if err := Rest.Server.Shutdown(ctx); err != nil {
+	// 	log.Printf("shutting down rest server failed: %s", err)
+	// }
+	// Grpc.Server.GracefulStop()
 }
