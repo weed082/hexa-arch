@@ -1,14 +1,37 @@
 version: '3.8'
 services:
+  app:
+    build: .
+    container_name: 'app'
+    environment:
+      MYSQL_USER: docker
+      MYSQL_DATABASE: go_arch
+      MYSQL_HOST: dockerMySQL #add to!!
+      MYSQL_PASSWORD: password
+    ports:
+      - 5000:5000
+      - 9000:9000
+    depends_on:
+      - db
+      - mongo
+
   db:
     image: mysql
+    container_name: mysql_test
     command: --default-authentication-plugin=mysql_native_password
     restart: always
+    expose:
+      - 3306
     ports:
       - 3306:3306
+    # environment:
+    #   MYSQL_ROOT_PASSWORD: 'Admin123'
+    #   MYSQL_DATABASE: 'go_arch'
     environment:
-      MYSQL_ROOT_PASSWORD: 'Admin123'
-      MYSQL_DATABASE: 'go_arch'
+      MYSQL_USER: docker
+      MYSQL_DATABASE: go_arch
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
     volumes:
       - mysql-data:/var/lib/mysql
 
@@ -32,13 +55,6 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_SERVER: mongo
-
-  web-server:
-    build: .
-    container_name: 'web-server'
-    ports:
-      - 5000:5000
-      - 9000:9000
 
 volumes:
   mysql-data:
