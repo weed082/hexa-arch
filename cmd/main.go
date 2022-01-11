@@ -58,7 +58,7 @@ func runRest() {
 	router := router.New()
 	// rest
 	Rest = rest.NewRestAdapter(logger, router, userApp)
-	Rest.Run("8080")
+	Rest.Run("5000")
 }
 
 //! run grpc server

@@ -33,6 +33,13 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_SERVER: mongo
 
+  web-server:
+    build: .
+    container_name: 'web-server'
+    ports:
+      - 5000:5000
+      - 9000:9000
+
 volumes:
   mysql-data:
     driver: local
