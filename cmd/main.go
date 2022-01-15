@@ -19,22 +19,7 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
-)
-
-var (
-	// mysql env
-	mysqlUser     = os.Getenv("MYSQL_USER")
-	mysqlPassword = os.Getenv("MYSQL_PASSWORD")
-	mysqlHost     = os.Getenv("MYSQL_HOST")
-	mysqlDatabase = os.Getenv("MYSQL_DATABASE")
-	// mongo env
-	mongoUser     = os.Getenv("MONGO_USER")
-	mongoPassword = os.Getenv("MONGO_PASSWORD")
-	mongoHost     = os.Getenv("MONGO_HOST")
-
-	// port env
-	restPort = os.Getenv("REST_PORT")
-	grpcPort = os.Getenv("GRPC_PORT")
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -51,17 +36,20 @@ var (
 )
 
 func init() {
+	if godotenv.Load(".dev.env") != nil {
+		log.Println("no env file")
+	}
 	// init mysql
-	dbSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s", mysqlUser, mysqlPassword, mysqlHost, mysqlDatabase)
+	dbSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE"))
 	mysqlDB = mysql.NewMysql(logger, "mysql", dbSourceName)
 
 	// init mongo
-	applyUri := fmt.Sprintf("mongodb://%s:%s@%s", mongoUser, mongoPassword, mongoHost)
+	applyUri := fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST"))
 	mongoDB = mongo.NewMongoDB(logger, applyUri, 5*time.Second)
 }
 
 func main() {
-	logger.Printf("csdfpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
+	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
 	go runRest()
 	go runGrpc()
 	gracefulShutdown() // block until grpc and rest server finishes
@@ -77,7 +65,7 @@ func runRest() {
 	router := router.New()
 	// rest
 	Rest = rest.NewRestAdapter(logger, router, userApp)
-	Rest.Run(restPort)
+	Rest.Run(os.Getenv("REST_PORT"))
 }
 
 //! run grpc server
@@ -91,7 +79,7 @@ func runGrpc() {
 	chatApp := application.NewChat(logger, map[int]port.Client{}, chatRepo)
 	// grpc
 	Grpc = grpc.NewServer(logger, chatPool, chatApp)
-	Grpc.Run(grpcPort)
+	Grpc.Run(os.Getenv("GRPC_PORT"))
 }
 
 //! grcefully shutdown in order

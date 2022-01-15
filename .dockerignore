@@ -1,11 +1,8 @@
 .git
 .gitignore
 .cache
-.env
-
+*.env
 *.yml
-Dockerfile
-
 *.md
-
-/tmp
+Dockerfile
+tmp

@@ -19,8 +19,6 @@ services:
     depends_on:
       - db
       - mongo
-    volumes:
-      - ./:/app
 
   db:
     image: mysql:${MYSQL_VERSION}
