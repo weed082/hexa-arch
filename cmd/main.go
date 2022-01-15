@@ -36,7 +36,7 @@ var (
 )
 
 func init() {
-	if godotenv.Load(".dev.env") != nil {
+	if godotenv.Load(".env.dev") != nil {
 		log.Println("no env file")
 	}
 	// init mysql
