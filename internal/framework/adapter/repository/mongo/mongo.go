@@ -1,4 +1,4 @@
-package mongo_db
+package mongo
 
 import (
 	"context"
@@ -17,9 +17,9 @@ type MongoDB struct {
 	client        *mongo.Client
 }
 
-func NewMongoDB(logger *log.Logger, ctxTimeout time.Duration) *MongoDB {
+func NewMongoDB(logger *log.Logger, applyUri string, ctxTimeout time.Duration) *MongoDB {
 	ctx, ctxCancelFunc := context.WithTimeout(context.Background(), ctxTimeout) // repository context
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://root:example@localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(applyUri))
 	if err != nil {
 		log.Fatalf("mongoDB new client failed : %v", err)
 	}

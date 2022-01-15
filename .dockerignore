@@ -1,0 +1,10 @@
+.git
+.gitignore
+.cache
+
+*.yml
+Dockerfile
+
+*.md
+
+/tmp

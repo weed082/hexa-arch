@@ -2,47 +2,48 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: 'app'
+    restart: always
     environment:
-      MYSQL_USER: docker
-      MYSQL_DATABASE: go_arch
-      MYSQL_HOST: dockerMySQL #add to!!
-      MYSQL_PASSWORD: password
+      MYSQL_HOST: db
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MONGO_HOST: mongo
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
     ports:
       - 5000:5000
       - 9000:9000
     depends_on:
       - db
       - mongo
+    volumes:
+      - .:/app
 
   db:
-    image: mysql
-    container_name: mysql_test
+    image: mysql:${MYSQL_VERSION}
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     expose:
       - 3306
     ports:
       - 3306:3306
-    # environment:
-    #   MYSQL_ROOT_PASSWORD: 'Admin123'
-    #   MYSQL_DATABASE: 'go_arch'
     environment:
-      MYSQL_USER: docker
-      MYSQL_DATABASE: go_arch
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
 
   mongo:
-    image: mongo
+    image: mongo:${MONGO_VERSION}
     restart: always
     ports:
       - 27017:27017
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongo-data:/data/db
 
@@ -52,8 +53,8 @@ services:
     ports:
       - 8081:8081
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
       ME_CONFIG_MONGODB_SERVER: mongo
 
 volumes:

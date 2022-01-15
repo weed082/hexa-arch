@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -13,33 +14,42 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/external/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mongo_db"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mongo"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mysql"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
-const (
-	DB_DRIVER      = "mysql"
-	DB_SOURCE_NAME = "root:Admin123@/go_arch"
-)
-
 var (
 	// logger
 	logger = log.New(os.Stdout, "LOG", log.LstdFlags|log.Llongfile)
-
 	// server
 	Grpc *grpc.Grpc
 	Rest *rest.Rest
-
 	// database
-	mysqlDB = mysql.NewMysql(logger, DB_DRIVER, DB_SOURCE_NAME)
-	mongoDB = mongo_db.NewMongoDB(logger, 5*time.Second)
-
+	mysqlDB *mysql.Mysql
+	mongoDB *mongo.MongoDB
 	// chat wait group
 	chatWg = &sync.WaitGroup{}
 )
+
+func init() {
+	// init mysql
+	mysqlUser := os.Getenv("MYSQL_USER")
+	mysqlPassword := os.Getenv("MYSQL_PASSWORD")
+	mysqlHost := os.Getenv("MYSQL_HOST")
+	mysqlDatabase := os.Getenv("MYSQL_DATABASE")
+	dbSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s", mysqlUser, mysqlPassword, mysqlHost, mysqlDatabase)
+	mysqlDB = mysql.NewMysql(logger, "mysql", dbSourceName)
+
+	// init mongo
+	mongoUser := os.Getenv("MONGO_USER")
+	mongoPassword := os.Getenv("MONGO_PASSWORD")
+	mongoHost := os.Getenv("MONGO_HOST")
+	applyUri := fmt.Sprintf("mongodb://%s:%s@%s", mongoUser, mongoPassword, mongoHost)
+	mongoDB = mongo.NewMongoDB(logger, applyUri, 5*time.Second)
+}
 
 func main() {
 	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
