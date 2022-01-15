@@ -11,14 +11,16 @@ services:
       MONGO_HOST: mongo
       MONGO_USER: ${MONGO_USER}
       MONGO_PASSWORD: ${MONGO_PASSWORD}
+      REST_PORT: ${REST_PORT}
+      GRPC_PORT: ${GRPC_PORT}
     ports:
-      - 5000:5000
-      - 9000:9000
+      - ${REST_PORT}:${REST_PORT}
+      - ${GRPC_PORT}:${GRPC_PORT}
     depends_on:
       - db
       - mongo
     volumes:
-      - .:/app
+      - ./:/app
 
   db:
     image: mysql:${MYSQL_VERSION}

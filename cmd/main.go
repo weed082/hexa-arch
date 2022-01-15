@@ -22,6 +22,22 @@ import (
 )
 
 var (
+	// mysql env
+	mysqlUser     = os.Getenv("MYSQL_USER")
+	mysqlPassword = os.Getenv("MYSQL_PASSWORD")
+	mysqlHost     = os.Getenv("MYSQL_HOST")
+	mysqlDatabase = os.Getenv("MYSQL_DATABASE")
+	// mongo env
+	mongoUser     = os.Getenv("MONGO_USER")
+	mongoPassword = os.Getenv("MONGO_PASSWORD")
+	mongoHost     = os.Getenv("MONGO_HOST")
+
+	// port env
+	restPort = os.Getenv("REST_PORT")
+	grpcPort = os.Getenv("GRPC_PORT")
+)
+
+var (
 	// logger
 	logger = log.New(os.Stdout, "LOG", log.LstdFlags|log.Llongfile)
 	// server
@@ -36,23 +52,16 @@ var (
 
 func init() {
 	// init mysql
-	mysqlUser := os.Getenv("MYSQL_USER")
-	mysqlPassword := os.Getenv("MYSQL_PASSWORD")
-	mysqlHost := os.Getenv("MYSQL_HOST")
-	mysqlDatabase := os.Getenv("MYSQL_DATABASE")
 	dbSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s", mysqlUser, mysqlPassword, mysqlHost, mysqlDatabase)
 	mysqlDB = mysql.NewMysql(logger, "mysql", dbSourceName)
 
 	// init mongo
-	mongoUser := os.Getenv("MONGO_USER")
-	mongoPassword := os.Getenv("MONGO_PASSWORD")
-	mongoHost := os.Getenv("MONGO_HOST")
 	applyUri := fmt.Sprintf("mongodb://%s:%s@%s", mongoUser, mongoPassword, mongoHost)
 	mongoDB = mongo.NewMongoDB(logger, applyUri, 5*time.Second)
 }
 
 func main() {
-	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
+	logger.Printf("csdfpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
 	go runRest()
 	go runGrpc()
 	gracefulShutdown() // block until grpc and rest server finishes
@@ -68,7 +77,7 @@ func runRest() {
 	router := router.New()
 	// rest
 	Rest = rest.NewRestAdapter(logger, router, userApp)
-	Rest.Run("5000")
+	Rest.Run(restPort)
 }
 
 //! run grpc server
@@ -82,7 +91,7 @@ func runGrpc() {
 	chatApp := application.NewChat(logger, map[int]port.Client{}, chatRepo)
 	// grpc
 	Grpc = grpc.NewServer(logger, chatPool, chatApp)
-	Grpc.Run("9000")
+	Grpc.Run(grpcPort)
 }
 
 //! grcefully shutdown in order
