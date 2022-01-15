@@ -1,8 +1,16 @@
+# git
 .git
 .gitignore
-.cache
-*.env
-*.yml
+
+# readme
 *.md
+
+# env
+.env*
+
+# docker
 Dockerfile
+*.yml
+
+# temp
 tmp
