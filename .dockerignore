@@ -1,6 +1,7 @@
 .git
 .gitignore
 .cache
+.env
 
 *.yml
 Dockerfile
