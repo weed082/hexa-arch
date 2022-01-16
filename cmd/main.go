@@ -19,7 +19,6 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
-	"github.com/joho/godotenv"
 )
 
 var (
@@ -36,9 +35,6 @@ var (
 )
 
 func init() {
-	if godotenv.Load(".env.dev") != nil {
-		log.Println("no env file")
-	}
 	// init mysql
 	dbSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE"))
 	mysqlDB = mysql.NewMysql(logger, "mysql", dbSourceName)

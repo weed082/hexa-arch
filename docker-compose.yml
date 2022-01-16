@@ -3,8 +3,6 @@ services:
   app:
     build:
       context: .
-      dockerfile: ${APP_DOCKER_FILE}
-    restart: always
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}
@@ -21,8 +19,6 @@ services:
     depends_on:
       - db
       - mongo
-    volumes:
-      - .:/app
 
   db:
     image: mysql:${MYSQL_VERSION}
