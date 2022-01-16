@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/external/pool"
 	"github.com/ByungHakNoh/hexagonal-microservice/external/router"
@@ -28,21 +27,11 @@ var (
 	Grpc *grpc.Grpc
 	Rest *rest.Rest
 	// database
-	mysqlDB *mysql.Mysql
-	mongoDB *mongo.MongoDB
+	mysqlDB = mysql.NewMysql(logger, "mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE")))
+	mongoDB = mongo.NewMongoDB(logger, fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST")))
 	// chat wait group
 	chatWg = &sync.WaitGroup{}
 )
-
-func init() {
-	// init mysql
-	dbSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE"))
-	mysqlDB = mysql.NewMysql(logger, "mysql", dbSourceName)
-
-	// init mongo
-	applyUri := fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST"))
-	mongoDB = mongo.NewMongoDB(logger, applyUri, 5*time.Second)
-}
 
 func main() {
 	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
