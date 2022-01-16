@@ -1,7 +1,9 @@
-version: '3.8'
+version: '3.9'
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: ${APP_DOCKER_FILE}
     restart: always
     environment:
       MYSQL_HOST: db
@@ -19,6 +21,8 @@ services:
     depends_on:
       - db
       - mongo
+    volumes:
+      - .:/app
 
   db:
     image: mysql:${MYSQL_VERSION}
