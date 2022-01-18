@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/external/pool"
 	"github.com/ByungHakNoh/hexagonal-microservice/external/router"
@@ -25,24 +24,14 @@ var (
 	// logger
 	logger = log.New(os.Stdout, "LOG", log.LstdFlags|log.Llongfile)
 	// server
-	Grpc *grpc.Grpc
-	Rest *rest.Rest
+	grpcServer *grpc.Grpc
+	restServer *rest.Rest
 	// database
-	mysqlDB *mysql.Mysql
-	mongoDB *mongo.MongoDB
+	mysqlDB = mysql.NewMysql(logger, "mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE")))
+	mongoDB = mongo.NewMongoDB(logger, fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST")))
 	// chat wait group
 	chatWg = &sync.WaitGroup{}
 )
-
-func init() {
-	// init mysql
-	dbSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE"))
-	mysqlDB = mysql.NewMysql(logger, "mysql", dbSourceName)
-
-	// init mongo
-	applyUri := fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST"))
-	mongoDB = mongo.NewMongoDB(logger, applyUri, 5*time.Second)
-}
 
 func main() {
 	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
@@ -60,8 +49,8 @@ func runRest() {
 	// router
 	router := router.New()
 	// rest
-	Rest = rest.NewRestAdapter(logger, router, userApp)
-	Rest.Run(os.Getenv("REST_PORT"))
+	restServer = rest.NewRestAdapter(logger, router, userApp)
+	restServer.Run(os.Getenv("REST_PORT"))
 }
 
 //! run grpc server
@@ -74,8 +63,8 @@ func runGrpc() {
 	// application
 	chatApp := application.NewChat(logger, map[int]port.Client{}, chatRepo)
 	// grpc
-	Grpc = grpc.NewServer(logger, chatPool, chatApp)
-	Grpc.Run(os.Getenv("GRPC_PORT"))
+	grpcServer = grpc.NewServer(logger, chatPool, chatApp)
+	grpcServer.Run(os.Getenv("GRPC_PORT"))
 }
 
 //! grcefully shutdown in order
@@ -91,11 +80,11 @@ func gracefulShutdown() {
 
 	//* close rest server
 	logger.Println("gracefully shutdown Rest") //! need to log before call graceful shutdown or race condition problem occur
-	Rest.Stop()
+	restServer.Stop()
 
 	//* close grpc server
 	logger.Println("gracefully shutdown Grpc") //! need to log before call graceful shutdown or race condition problem occur
-	Grpc.Stop()
+	grpcServer.Stop()
 
 	chatWg.Wait() //* wait for chat pool to finish
 }

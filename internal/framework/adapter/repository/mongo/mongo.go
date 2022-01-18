@@ -17,8 +17,8 @@ type MongoDB struct {
 	client        *mongo.Client
 }
 
-func NewMongoDB(logger *log.Logger, applyUri string, ctxTimeout time.Duration) *MongoDB {
-	ctx, ctxCancelFunc := context.WithTimeout(context.Background(), ctxTimeout) // repository context
+func NewMongoDB(logger *log.Logger, applyUri string) *MongoDB {
+	ctx, ctxCancelFunc := context.WithTimeout(context.Background(), 5*time.Second) // repository context
 	client, err := mongo.NewClient(options.Client().ApplyURI(applyUri))
 	if err != nil {
 		log.Fatalf("mongoDB new client failed : %v", err)
