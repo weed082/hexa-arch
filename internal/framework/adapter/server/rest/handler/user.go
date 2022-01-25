@@ -29,8 +29,6 @@ func (h *User) Register(r port.Router) {
 }
 
 func (h *User) test(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
 	urlParams := router.UrlParam(r)
 	user := model.User{Idx: 3, Name: urlParams["param"]}
 	jsonBytes, err := json.Marshal(user)
@@ -41,8 +39,6 @@ func (h *User) test(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *User) create(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
 
 	reqBody := struct {
 		TestStr string `json:"test_str"`

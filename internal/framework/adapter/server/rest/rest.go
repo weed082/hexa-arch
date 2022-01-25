@@ -27,7 +27,6 @@ func NewRestAdapter(logger *log.Logger, router port.Router, userApp port.User) *
 
 func (r *Rest) Run(port string) {
 	handler.NewUser(r.logger, r.userApp).Register(r.router)
-
 	r.server = r.NewServer(r.router, ":"+port)
 	err := r.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
