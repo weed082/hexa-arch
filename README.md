@@ -7,8 +7,5 @@ Hexagonal architecture microservice
     - manage docker as non-root user (https://docs.docker.com/engine/install/linux-postinstall/)
 
   (2) start container
-    - development
-      config : docker-compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev config
-      build  : docker-compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev build
-      start  : docker-compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up
+    - development : docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
       
