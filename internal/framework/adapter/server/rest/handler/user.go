@@ -29,6 +29,8 @@ func (h *User) Register(r port.Router) {
 }
 
 func (h *User) test(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
 	urlParams := router.UrlParam(r)
 	user := model.User{Idx: 3, Name: urlParams["param"]}
 	jsonBytes, err := json.Marshal(user)
@@ -38,19 +40,19 @@ func (h *User) test(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, string(jsonBytes))
 }
 
-// testing the post req, res
-type SomeStruct struct {
-	Test string
-}
-
 func (h *User) create(w http.ResponseWriter, r *http.Request) {
-	var someStruct SomeStruct
-	err := json.NewDecoder(r.Body).Decode(&someStruct)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+
+	reqBody := struct {
+		TestStr string `json:"test_str"`
+	}{}
+	err := json.NewDecoder(r.Body).Decode(&reqBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	res, err := json.Marshal(someStruct)
+	res, err := json.Marshal(reqBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
