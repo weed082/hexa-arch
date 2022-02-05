@@ -11,22 +11,33 @@ import (
 )
 
 type Rest struct {
-	logger  *log.Logger
-	server  *http.Server
-	router  port.Router
-	userApp port.User
+	logger   *log.Logger
+	server   *http.Server
+	router   port.Router
+	userApp  port.User
+	chatApp  port.Chat
+	chatPool port.Consumer
 }
 
-func NewRestAdapter(logger *log.Logger, router port.Router, userApp port.User) *Rest {
+func NewRestAdapter(
+	logger *log.Logger,
+	router port.Router,
+	userApp port.User,
+	chatApp port.Chat,
+	chatPool port.Consumer,
+) *Rest {
 	return &Rest{
-		logger:  logger,
-		router:  router,
-		userApp: userApp,
+		logger:   logger,
+		router:   router,
+		userApp:  userApp,
+		chatApp:  chatApp,
+		chatPool: chatPool,
 	}
 }
 
 func (r *Rest) Run(port string) {
 	handler.NewUser(r.logger, r.userApp).Register(r.router)
+	handler.NewChat(r.logger, r.chatApp).Register(r.router)
 	r.server = r.NewServer(r.router, ":"+port)
 	err := r.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {

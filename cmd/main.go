@@ -29,39 +29,37 @@ var (
 	// database
 	mysqlDB = mysql.NewMysql(logger, "mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE")))
 	mongoDB = mongo.NewMongoDB(logger, fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST")))
-	// chat wait group
-	chatWg = &sync.WaitGroup{}
+	// chat worker pool
+	chatPool = pool.NewWorkerPool(logger, chatWg, 100)
+	chatWg   = &sync.WaitGroup{}
 )
 
 func main() {
 	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
-	go runRest()
-	go runGrpc()
+
+	chatPool.Generate(1)
+	chatRepo := repository.NewChat(logger, mysqlDB)
+	chatApp := application.NewChat(logger, map[int]port.Client{}, chatRepo)
+
+	go runRest(chatApp)
+	go runGrpc(chatApp)
 	gracefulShutdown() // block until grpc and rest server finishes
 }
 
 //! run rest server
-func runRest() {
-	// repository
+func runRest(chatApp port.Chat) {
+	// user
 	userRepo := repository.NewUser(logger, mysqlDB, mongoDB)
-	// application
 	userApp := application.NewUser(logger, userRepo)
 	// router
 	router := router.New()
 	// rest
-	restServer = rest.NewRestAdapter(logger, router, userApp)
+	restServer = rest.NewRestAdapter(logger, router, userApp, chatApp, chatPool)
 	restServer.Run(os.Getenv("REST_PORT"))
 }
 
 //! run grpc server
-func runGrpc() {
-	chatPool := pool.NewWorkerPool(logger, chatWg, 100)
-	defer chatPool.Stop()
-	chatPool.Generate(1)
-	// repository
-	chatRepo := repository.NewChat(logger, mysqlDB)
-	// application
-	chatApp := application.NewChat(logger, map[int]port.Client{}, chatRepo)
+func runGrpc(chatApp port.Chat) {
 	// grpc
 	grpcServer = grpc.NewServer(logger, chatPool, chatApp)
 	grpcServer.Run(os.Getenv("GRPC_PORT"))
@@ -86,5 +84,7 @@ func gracefulShutdown() {
 	logger.Println("gracefully shutdown Grpc") //! need to log before call graceful shutdown or race condition problem occur
 	grpcServer.Stop()
 
-	chatWg.Wait() //* wait for chat pool to finish
+	//* stop chat pool
+	chatPool.Stop()
+	chatWg.Wait()
 }

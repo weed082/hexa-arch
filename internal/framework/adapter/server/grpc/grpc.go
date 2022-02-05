@@ -13,11 +13,11 @@ import (
 type Grpc struct {
 	logger  *log.Logger
 	server  *grpc.Server
-	chatWp  port.WorkerPool
+	chatWp  port.Consumer
 	chatApp port.Chat
 }
 
-func NewServer(logger *log.Logger, chatWp port.WorkerPool, chatApp port.Chat) *Grpc {
+func NewServer(logger *log.Logger, chatWp port.Consumer, chatApp port.Chat) *Grpc {
 	return &Grpc{
 		logger:  logger,
 		chatWp:  chatWp,

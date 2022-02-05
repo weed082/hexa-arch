@@ -20,12 +20,12 @@ const (
 
 type Server struct {
 	logger   *log.Logger
-	chatPool port.WorkerPool
+	chatPool port.Consumer
 	chatApp  port.Chat
 	rooms    map[int][]port.Client
 }
 
-func NewServer(logger *log.Logger, chatPool port.WorkerPool, chatApp port.Chat) *Server {
+func NewServer(logger *log.Logger, chatPool port.Consumer, chatApp port.Chat) *Server {
 	return &Server{
 		logger:   logger,
 		chatPool: chatPool,
