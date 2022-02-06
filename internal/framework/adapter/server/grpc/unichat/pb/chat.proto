@@ -25,6 +25,6 @@ service ChatService {
   rpc CreateRoom(User) returns (Empty); 
   rpc JoinRoom(Participant) returns (Empty);
   rpc ExitRoom(Participant) returns (Empty);
-  rpc ReceiveMsg(Empty) returns (stream Msg);
+  rpc ReceiveMsg(User) returns (stream Msg);
   rpc SendMsg(Msg) returns (Empty);
 }

@@ -36,10 +36,10 @@ func (s *Server) ExitRoom(ctx context.Context, user *pb.Participant) (*pb.Empty,
 	return &pb.Empty{}, nil
 }
 
-func (s *Server) ReceiveMsg(req *pb.Empty, stream pb.ChatService_ReceiveMsgServer) error {
-	return nil
-}
-
 func (s *Server) SendMsg(ctx context.Context, user *pb.Msg) (*pb.Empty, error) {
 	return &pb.Empty{}, nil
+}
+
+func (s *Server) ReceiveMsg(user *pb.User, stream pb.ChatService_ReceiveMsgServer) error {
+	return nil
 }
