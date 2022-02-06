@@ -1,0 +1,30 @@
+syntax = "proto3";
+option go_package="./";
+package unichat;
+//! protoc --go_out=plugins=grpc:. chat.proto
+
+message Empty {}
+
+message User {
+  uint32 idx = 1;
+}
+
+message Participant {
+  uint32 room_idx = 1;
+  uint32 user_idx = 2;
+}
+
+message Msg {
+  uint32 type = 1;
+  uint32 room_idx = 2;
+  uint32 user_idx = 3;
+  string body = 4;
+}
+
+service ChatService {
+  rpc CreateRoom(User) returns (Empty); 
+  rpc JoinRoom(Participant) returns (Empty);
+  rpc ExitRoom(Participant) returns (Empty);
+  rpc ReceiveMsg(Empty) returns (stream Msg);
+  rpc SendMsg(Msg) returns (Empty);
+}
