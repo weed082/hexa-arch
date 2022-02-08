@@ -27,9 +27,11 @@ func NewChat(logger *log.Logger, rooms map[int]port.Client, pool port.WorkerPool
 
 //! ----------- 2) chat function related -----------
 //* (1) rooms
+func (c *Chat) CreateRoom(roomIdxs *[]int) (int, error) {
+	roomIdx := 1 // TODO: need to get room idx from db
+	*roomIdxs = append(*roomIdxs, roomIdx)
 
-func (c *Chat) CreateRoom() {
-
+	return roomIdx, nil
 }
 
 func (c *Chat) JoinRoom(roomIdx int, client port.Client) {
