@@ -1,7 +1,6 @@
 package application
 
 import (
-	"errors"
 	"log"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
@@ -9,13 +8,17 @@ import (
 
 type Chat struct {
 	logger *log.Logger
+	pool   port.WorkerPool
 	repo   port.ChatRepo
+	rooms  map[int][]port.Client
 }
 
-func NewChat(logger *log.Logger, rooms map[int]port.Client, repo port.ChatRepo) *Chat {
+func NewChat(logger *log.Logger, rooms map[int]port.Client, pool port.WorkerPool, repo port.ChatRepo) *Chat {
 	return &Chat{
 		logger: logger,
+		pool:   pool,
 		repo:   repo,
+		rooms:  make(map[int][]port.Client),
 	}
 }
 
@@ -23,52 +26,64 @@ func NewChat(logger *log.Logger, rooms map[int]port.Client, repo port.ChatRepo) 
 
 //! ----------- 2) chat function related -----------
 //* (1) rooms
-func (c *Chat) JoinRoom(rooms map[int][]port.Client, roomIdx int, client port.Client) {
-	rooms[roomIdx] = append(rooms[roomIdx], client)
-	c.logger.Println(len(rooms[roomIdx]))
+
+func (c *Chat) CreateRoom() {
+
 }
 
-func (c *Chat) ExitRoom(rooms map[int][]port.Client, roomIdx, userIdx int) error {
-	clients := rooms[roomIdx]
-	for i, client := range clients {
-		if client.GetUserIdx() != userIdx {
-			continue
-		}
-		rooms[roomIdx] = append(clients[:i], clients[i+1:]...)
-		if len(rooms[roomIdx]) == 0 {
-			delete(rooms, roomIdx)
-		}
-		c.logger.Printf("current clients : %d, current rooms : %d", len(rooms[roomIdx]), len(rooms))
-		return nil
-	}
-	return errors.New("no match user idx in the chat room")
+func (c *Chat) JoinRoom(roomIdx int, client port.Client) {
+	c.pool.RegisterJob(func() {
+		c.rooms[roomIdx] = append(c.rooms[roomIdx], client)
+		c.logger.Println(len(c.rooms[roomIdx]))
+	})
 }
 
-func (c *Chat) ExitAllRooms(rooms map[int][]port.Client, roomIdxs *[]int, client port.Client) {
-	for _, roomIdx := range *roomIdxs {
-		clients := rooms[roomIdx]
-		for i, existClient := range clients {
-			if existClient == client {
-				rooms[roomIdx] = append(clients[:i], clients[i+1:]...) // delete user
-				if len(rooms[roomIdx]) == 0 {
-					delete(rooms, roomIdx) // delete room
+func (c *Chat) ExitRoom(roomIdx, userIdx int) {
+	c.pool.RegisterJob(func() {
+		clients := c.rooms[roomIdx]
+		for i, client := range clients {
+			if client.GetUserIdx() == userIdx {
+				c.rooms[roomIdx] = append(clients[:i], clients[i+1:]...)
+				if len(c.rooms[roomIdx]) == 0 {
+					delete(c.rooms, roomIdx)
 				}
-				c.logger.Printf("room len : %d, clients len : %d, index : %d", len(rooms), len(rooms[roomIdx]), i)
-				break
+				c.logger.Printf("current clients : %d, current rooms : %d", len(c.rooms[roomIdx]), len(c.rooms))
+				return
 			}
 		}
-	}
+		c.logger.Println("no match user idx in the chat room")
+	})
+}
+
+func (c *Chat) ExitAllRooms(roomIdxs *[]int, client port.Client) {
+	c.pool.RegisterJob(func() {
+		for _, roomIdx := range *roomIdxs {
+			clients := c.rooms[roomIdx]
+			for i, existClient := range clients {
+				if existClient == client {
+					c.rooms[roomIdx] = append(clients[:i], clients[i+1:]...) // delete user
+					if len(c.rooms[roomIdx]) == 0 {
+						delete(c.rooms, roomIdx) // delete room
+					}
+					c.logger.Printf("room len : %d, clients len : %d, index : %d", len(c.rooms), len(c.rooms[roomIdx]), i)
+					break
+				}
+			}
+		}
+	})
 }
 
 //* (2) message
-func (c *Chat) BroadcastMsg(rooms map[int][]port.Client, msg port.Message) {
-	roomIdx := msg.GetRoomIdx()
+func (c *Chat) BroadcastMsg(msg port.Message) {
+	c.pool.RegisterJob(func() {
+		roomIdx := msg.GetRoomIdx()
 
-	for _, client := range rooms[roomIdx] {
-		err := client.SendMsg(msg)
-		if err != nil {
-			c.logger.Printf("sending message error: %s", err)
-			continue
+		for _, client := range c.rooms[roomIdx] {
+			err := client.SendMsg(msg)
+			if err != nil {
+				c.logger.Printf("sending message error: %s", err)
+				continue
+			}
 		}
-	}
+	})
 }
