@@ -36,7 +36,6 @@ var (
 func main() {
 	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
 
-	chatPool.Generate(1)
 	chatRepo := repository.NewChat(logger, mysqlDB)
 	chatApp := application.NewChat(logger, map[int]port.Client{}, chatPool, chatRepo)
 

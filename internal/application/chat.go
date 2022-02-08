@@ -14,6 +14,7 @@ type Chat struct {
 }
 
 func NewChat(logger *log.Logger, rooms map[int]port.Client, pool port.WorkerPool, repo port.ChatRepo) *Chat {
+	pool.Generate(1) // only need single worker for sync
 	return &Chat{
 		logger: logger,
 		pool:   pool,
