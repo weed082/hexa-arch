@@ -9,8 +9,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/external/pool"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/core/pool"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mongo"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mysql"
@@ -38,7 +38,7 @@ func main() {
 
 	chatPool.Generate(1)
 	chatRepo := repository.NewChat(logger, mysqlDB)
-	chatApp := application.NewChat(logger, map[int]port.Client{}, chatRepo)
+	chatApp := application.NewChat(logger, map[int]port.Client{}, chatPool, chatRepo)
 
 	go runRest(chatApp)
 	go runGrpc(chatApp)
@@ -58,7 +58,7 @@ func runRest(chatApp port.Chat) {
 //! run grpc server
 func runGrpc(chatApp port.Chat) {
 	// grpc
-	grpcServer = grpc.NewServer(logger, chatPool, chatApp)
+	grpcServer = grpc.NewServer(logger, chatApp)
 	grpcServer.Run(os.Getenv("GRPC_PORT"))
 }
 
