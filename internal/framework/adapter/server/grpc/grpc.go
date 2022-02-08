@@ -6,8 +6,6 @@ import (
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat"
 	bidichatpb "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/unichat"
-	unichatpb "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/unichat/pb"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 	"google.golang.org/grpc"
 )
@@ -37,9 +35,6 @@ func (g *Grpc) Run(port string) {
 	// bi-directional chat
 	bidiChatServer := chat.NewServer(g.logger, g.chatWp, g.chatApp)
 	bidichatpb.RegisterChatServiceServer(g.server, bidiChatServer)
-	// uni-directional chat
-	uniChatServer := unichat.NewServer(g.logger, g.chatWp, g.chatApp)
-	unichatpb.RegisterChatServiceServer(g.server, uniChatServer)
 
 	err = g.server.Serve(listener)
 	if err != nil {
