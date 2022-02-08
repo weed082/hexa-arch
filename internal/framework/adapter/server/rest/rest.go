@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/server"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
 type Rest struct {
 	logger   *log.Logger
 	server   *http.Server
-	router   port.Router
 	userApp  port.User
 	chatApp  port.Chat
 	chatPool port.Consumer
@@ -21,14 +22,12 @@ type Rest struct {
 
 func NewRestAdapter(
 	logger *log.Logger,
-	router port.Router,
 	userApp port.User,
 	chatApp port.Chat,
 	chatPool port.Consumer,
 ) *Rest {
 	return &Rest{
 		logger:   logger,
-		router:   router,
 		userApp:  userApp,
 		chatApp:  chatApp,
 		chatPool: chatPool,
@@ -36,14 +35,17 @@ func NewRestAdapter(
 }
 
 func (r *Rest) Run(port string) {
-	handler.NewUser(r.logger, r.userApp).Register(r.router)
-	handler.NewChat(r.logger, r.chatApp).Register(r.router)
-	r.server = r.NewServer(r.router, ":"+port)
-	err := r.server.ListenAndServe()
+	router := router.New() // custom router
+	// handlers
+	handler.NewUser(r.logger, r.userApp).Register(router)
+	handler.NewChat(r.logger, r.chatApp).Register(router)
+
+	// serve rest server
+	server := server.NewServer(router, ":"+port)
+	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		r.logger.Fatalf("rest server error: %s", err)
 	}
-	r.logger.Println(err)
 }
 
 func (r *Rest) Stop() {

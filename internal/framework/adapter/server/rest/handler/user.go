@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/external/router"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/model"
 )

@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/external/pool"
-	"github.com/ByungHakNoh/hexagonal-microservice/external/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/application"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/repository/mongo"
@@ -51,10 +50,8 @@ func runRest(chatApp port.Chat) {
 	// user
 	userRepo := repository.NewUser(logger, mysqlDB, mongoDB)
 	userApp := application.NewUser(logger, userRepo)
-	// router
-	router := router.New()
 	// rest
-	restServer = rest.NewRestAdapter(logger, router, userApp, chatApp, chatPool)
+	restServer = rest.NewRestAdapter(logger, userApp, chatApp, chatPool)
 	restServer.Run(os.Getenv("REST_PORT"))
 }
 
