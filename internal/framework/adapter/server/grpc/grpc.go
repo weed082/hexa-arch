@@ -13,14 +13,12 @@ import (
 type Grpc struct {
 	logger  *log.Logger
 	server  *grpc.Server
-	chatWp  port.Consumer
 	chatApp port.Chat
 }
 
-func NewServer(logger *log.Logger, chatWp port.Consumer, chatApp port.Chat) *Grpc {
+func NewServer(logger *log.Logger, chatApp port.Chat) *Grpc {
 	return &Grpc{
 		logger:  logger,
-		chatWp:  chatWp,
 		chatApp: chatApp,
 	}
 }
@@ -33,7 +31,7 @@ func (g *Grpc) Run(port string) {
 
 	g.server = grpc.NewServer()
 	// bi-directional chat
-	bidiChatServer := chat.NewServer(g.logger, g.chatWp, g.chatApp)
+	bidiChatServer := chat.NewServer(g.logger, g.chatApp)
 	bidichatpb.RegisterChatServiceServer(g.server, bidiChatServer)
 
 	err = g.server.Serve(listener)
