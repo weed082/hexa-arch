@@ -3,7 +3,7 @@ package port
 //! Chat
 type ChatRepo interface {
 	CreateRoom() (int, error)
-	SendMessage() error
+	UploadMsg() error
 }
 
 type ChatSql interface {

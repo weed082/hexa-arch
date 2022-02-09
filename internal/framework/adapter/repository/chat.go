@@ -22,6 +22,6 @@ func (r *Chat) CreateRoom() (int, error) {
 	return 1, nil
 }
 
-func (r *Chat) SendMessage() error {
+func (r *Chat) UploadMsg() error {
 	return nil
 }
