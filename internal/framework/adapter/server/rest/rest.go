@@ -13,24 +13,21 @@ import (
 )
 
 type Rest struct {
-	logger   *log.Logger
-	server   *http.Server
-	userApp  port.User
-	chatApp  port.Chat
-	chatPool port.Consumer
+	logger  *log.Logger
+	server  *http.Server
+	userApp port.User
+	chatApp port.Chat
 }
 
 func NewRestAdapter(
 	logger *log.Logger,
 	userApp port.User,
 	chatApp port.Chat,
-	chatPool port.Consumer,
 ) *Rest {
 	return &Rest{
-		logger:   logger,
-		userApp:  userApp,
-		chatApp:  chatApp,
-		chatPool: chatPool,
+		logger:  logger,
+		userApp: userApp,
+		chatApp: chatApp,
 	}
 }
 
