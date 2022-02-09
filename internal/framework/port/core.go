@@ -2,14 +2,10 @@ package port
 
 import "net/http"
 
-type Consumer interface {
-	RegisterJob(callback func())
-}
-
 type WorkerPool interface {
 	Generate(count int)
 	Stop()
-	Consumer
+	RegisterJob(callback func())
 }
 
 type Router interface {
