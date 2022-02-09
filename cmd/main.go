@@ -37,7 +37,7 @@ func main() {
 	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
 
 	chatRepo := repository.NewChat(logger, mysqlDB)
-	chatApp := application.NewChat(logger, map[int]port.Client{}, chatPool, chatRepo)
+	chatApp := application.NewChat(logger, map[int]port.ChatClient{}, chatRepo, chatPool)
 
 	go runRest(chatApp)
 	go runGrpc(chatApp)
@@ -50,7 +50,7 @@ func runRest(chatApp port.Chat) {
 	userRepo := repository.NewUser(logger, mysqlDB, mongoDB)
 	userApp := application.NewUser(logger, userRepo)
 	// rest
-	restServer = rest.NewRestAdapter(logger, userApp, chatApp, chatPool)
+	restServer = rest.NewRestAdapter(logger, userApp, chatApp)
 	restServer.Run(os.Getenv("REST_PORT"))
 }
 
