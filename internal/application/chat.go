@@ -8,40 +8,39 @@ import (
 
 type Chat struct {
 	logger *log.Logger
-	pool   port.WorkerPool
 	repo   port.ChatRepo
-	rooms  map[int][]port.Client
+	pool   port.WorkerPool
+	rooms  map[int][]port.ChatClient
 }
 
-func NewChat(logger *log.Logger, rooms map[int]port.Client, pool port.WorkerPool, repo port.ChatRepo) *Chat {
+func NewChat(logger *log.Logger, rooms map[int]port.ChatClient, repo port.ChatRepo, pool port.WorkerPool) *Chat {
 	pool.Generate(1) // only need single worker for sync
 	return &Chat{
 		logger: logger,
-		pool:   pool,
 		repo:   repo,
-		rooms:  make(map[int][]port.Client),
+		pool:   pool,
+		rooms:  make(map[int][]port.ChatClient),
 	}
 }
 
-//! ----------- 1) chat db related -----------
-
-//! ----------- 2) chat function related -----------
-//* (1) rooms
-func (c *Chat) CreateRoom(roomIdxs *[]int) (int, error) {
+//! ----------- 1. chat room -----------
+//* create a chat room
+func (c *Chat) CreateRoom() (int, error) {
 	roomIdx := 1 // TODO: need to get room idx from db
-	*roomIdxs = append(*roomIdxs, roomIdx)
 
 	return roomIdx, nil
 }
 
-func (c *Chat) JoinRoom(roomIdx int, client port.Client) {
+//* join a room
+func (c *Chat) Join(roomIdx int, client port.ChatClient) {
 	c.pool.RegisterJob(func() {
 		c.rooms[roomIdx] = append(c.rooms[roomIdx], client)
 		c.logger.Println(len(c.rooms[roomIdx]))
 	})
 }
 
-func (c *Chat) ExitRoom(roomIdx, userIdx int) {
+//* exist a room
+func (c *Chat) Exit(roomIdx, userIdx int) {
 	c.pool.RegisterJob(func() {
 		clients := c.rooms[roomIdx]
 		for i, client := range clients {
@@ -58,26 +57,42 @@ func (c *Chat) ExitRoom(roomIdx, userIdx int) {
 	})
 }
 
-func (c *Chat) ExitAllRooms(roomIdxs *[]int, client port.Client) {
+//! ----------- 2. connection -----------
+//* connect the client to the chat room
+func (c *Chat) connect(roomIdx int, client port.ChatClient) {
+
+}
+
+//* connect the client in all chat rooms that are participated in
+func (c *Chat) ConnectAll(client port.ChatClient) {
+
+}
+
+//* disconnect the client from the chat room
+func (c *Chat) disconnect(roomIdx int, client port.ChatClient) {
+
+}
+
+//* disconnect the client from all chat rooms that are participated in
+func (c *Chat) DisconnectAll(client port.ChatClient) {
 	c.pool.RegisterJob(func() {
-		for _, roomIdx := range *roomIdxs {
-			clients := c.rooms[roomIdx]
+		for roomIdx, clients := range c.rooms {
 			for i, existClient := range clients {
-				if existClient == client {
+				if client == existClient {
 					c.rooms[roomIdx] = append(clients[:i], clients[i+1:]...) // delete user
 					if len(c.rooms[roomIdx]) == 0 {
 						delete(c.rooms, roomIdx) // delete room
 					}
 					c.logger.Printf("room len : %d, clients len : %d, index : %d", len(c.rooms), len(c.rooms[roomIdx]), i)
-					break
 				}
 			}
 		}
 	})
 }
 
-//* (2) message
-func (c *Chat) BroadcastMsg(msg port.Message) {
+//! ----------- 3. message -----------
+//* send message to all clients that are participated in the chat room given
+func (c *Chat) SendMsg(msg port.ChatMsg) {
 	c.pool.RegisterJob(func() {
 		roomIdx := msg.GetRoomIdx()
 
