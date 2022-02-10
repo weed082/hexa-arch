@@ -2,17 +2,21 @@ package repository
 
 import (
 	"log"
-
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
+
+type userSql interface {
+}
+
+type userNosql interface {
+}
 
 type User struct {
 	logger  *log.Logger
-	sqlDB   port.UserSql
-	noSqlDB port.UserNoSql
+	sqlDB   userSql
+	noSqlDB userNosql
 }
 
-func NewUser(logger *log.Logger, sqlDB port.UserSql, noSqlDB port.UserNoSql) *User {
+func NewUser(logger *log.Logger, sqlDB userSql, noSqlDB userNosql) *User {
 	return &User{
 		logger:  logger,
 		sqlDB:   sqlDB,
