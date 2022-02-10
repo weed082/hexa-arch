@@ -13,7 +13,7 @@ type Chat struct {
 	rooms  map[int][]port.ChatClient
 }
 
-func NewChat(logger *log.Logger, rooms map[int]port.ChatClient, repo port.ChatRepo, pool port.WorkerPool) *Chat {
+func NewChat(logger *log.Logger, repo port.ChatRepo, pool port.WorkerPool) *Chat {
 	pool.Generate(1) // only need single worker for sync
 	return &Chat{
 		logger: logger,
@@ -58,20 +58,20 @@ func (c *Chat) Exit(roomIdx, userIdx int) {
 }
 
 //! ----------- 2. connection -----------
-//* connect the client to the chat room
-func (c *Chat) connect(roomIdx int, client port.ChatClient) {
+// //* connect the client to the chat room
+// func (c *Chat) connect(roomIdx int, client port.ChatClient) {
 
-}
+// }
 
 //* connect the client in all chat rooms that are participated in
 func (c *Chat) ConnectAll(client port.ChatClient) {
 
 }
 
-//* disconnect the client from the chat room
-func (c *Chat) disconnect(roomIdx int, client port.ChatClient) {
+// //* disconnect the client from the chat room
+// func (c *Chat) disconnect(roomIdx int, client port.ChatClient) {
 
-}
+// }
 
 //* disconnect the client from all chat rooms that are participated in
 func (c *Chat) DisconnectAll(client port.ChatClient) {
