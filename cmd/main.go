@@ -37,7 +37,7 @@ func main() {
 	logger.Printf("cpu : %d", runtime.GOMAXPROCS(runtime.NumCPU()))
 
 	chatRepo := repository.NewChat(logger, mysqlDB)
-	chatApp := application.NewChat(logger, map[int]port.ChatClient{}, chatRepo, chatPool)
+	chatApp := application.NewChat(logger, chatRepo, chatPool)
 
 	go runRest(chatApp)
 	go runGrpc(chatApp)
