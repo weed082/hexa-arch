@@ -6,21 +6,6 @@ type ChatRepo interface {
 	UploadMsg() error
 }
 
-type ChatSql interface {
-}
-
-type FileRepo interface {
-}
-
-type FileSql interface {
-}
-
 //! User
 type UserRepo interface {
-}
-
-type UserSql interface {
-}
-
-type UserNoSql interface {
 }
