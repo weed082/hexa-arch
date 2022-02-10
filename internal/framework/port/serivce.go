@@ -10,7 +10,7 @@ type Chat interface {
 	SendMsg(msg ChatMsg)
 }
 
-//** (1) chat client
+//* (1) chat client
 type ChatClient interface {
 	GetUserIdx() int
 	SendMsg(msg interface{}) error
