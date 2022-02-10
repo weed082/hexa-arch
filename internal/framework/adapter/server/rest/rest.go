@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler/chat"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler/user"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/server"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
@@ -34,8 +35,8 @@ func NewRestAdapter(
 func (r *Rest) Run(port string) {
 	router := router.New() // custom router
 	// handlers
-	handler.NewUser(r.logger, r.userApp).Register(router)
-	handler.NewChat(r.logger, r.chatApp).Register(router)
+	user.NewUser(r.logger, r.userApp).Register(router)
+	chat.NewChat(r.logger, r.chatApp).Register(router)
 
 	// serve rest server
 	server := server.NewServer(router, ":"+port)
