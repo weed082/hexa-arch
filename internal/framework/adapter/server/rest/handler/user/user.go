@@ -1,4 +1,4 @@
-package handler
+package user
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/model"
@@ -23,7 +24,7 @@ func NewUser(logger *log.Logger, app port.User) *User {
 	}
 }
 
-func (h *User) Register(r port.Router) {
+func (h *User) Register(r handler.Router) {
 	r.Get("/test/:param(param|sub)", h.test)
 	r.Post("/user/create", h.create)
 }

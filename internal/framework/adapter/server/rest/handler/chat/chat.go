@@ -1,10 +1,11 @@
-package handler
+package chat
 
 import (
 	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
@@ -20,7 +21,7 @@ func NewChat(logger *log.Logger, app port.Chat) *Chat {
 	}
 }
 
-func (h *Chat) Register(r port.Router) {
+func (h *Chat) Register(r handler.Router) {
 	r.Get("/chat", h.connect)
 }
 
