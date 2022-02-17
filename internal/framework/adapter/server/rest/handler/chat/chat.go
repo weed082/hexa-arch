@@ -51,3 +51,7 @@ func (h *Chat) connect(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+func (h *Chat) sendMsg() {
+
+}
