@@ -11,7 +11,7 @@ type Middleware struct {
 	logger *log.Logger
 }
 
-func NewServerHeader(logger *log.Logger) *Middleware {
+func NewServer(logger *log.Logger) *Middleware {
 	return &Middleware{
 		logger: logger,
 	}

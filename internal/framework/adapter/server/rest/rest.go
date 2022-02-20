@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler/chat"
+	middlleware "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler/middleware"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler/user"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/server"
@@ -35,6 +36,7 @@ func NewRestAdapter(
 func (r *Rest) Run(port string) {
 	router := router.New() // custom router
 	// handlers
+  middlleware.NewServer(r.logger).Register(router)
 	user.NewUser(r.logger, r.userApp).Register(router)
 	chat.NewChat(r.logger, r.chatApp).Register(router)
 
