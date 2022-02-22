@@ -9,7 +9,7 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/router"
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/model"
+	"github.com/ByungHakNoh/hexagonal-microservice/internal/model/user"
 )
 
 type User struct {
@@ -31,7 +31,7 @@ func (h *User) Register(r handler.Router) {
 
 func (h *User) test(w http.ResponseWriter, r *http.Request) {
 	urlParams := router.UrlParam(r)
-	user := model.User{Idx: 3, Name: urlParams["param"]}
+	user := user.User{Idx: 3, Name: urlParams["param"]}
 	jsonBytes, err := json.Marshal(user)
 	if err != nil {
 		h.logger.Printf("json marshal failed : %s", err)
