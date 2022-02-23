@@ -8,7 +8,7 @@ import (
 
 type Client struct {
 	userIdx int
-  name string
+	name    string
 	stream  pb.ChatService_ChatServiceServer
 }
 
