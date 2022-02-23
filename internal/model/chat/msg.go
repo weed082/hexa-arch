@@ -8,10 +8,3 @@ type Msg struct {
 	Body    string `json:"body"`
 }
 
-func (m *Msg) GetRoomIdx() int {
-	return m.RoomIdx
-}
-
-func (m *Msg) GetUserIdx() int {
-	return m.UserIdx
-}

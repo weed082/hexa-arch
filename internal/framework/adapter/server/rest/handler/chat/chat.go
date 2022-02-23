@@ -39,11 +39,11 @@ func NewChat(logger *log.Logger, app port.Chat) *Chat {
 }
 
 func (h *Chat) Register(r handler.Router) {
-	r.Get("/chat", h.connect)
+	r.Get("/chat", h.chat)
 }
 
 //* ws connection
-func (h *Chat) connect(w http.ResponseWriter, r *http.Request) {
+func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
 	wsUpgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -69,17 +69,17 @@ func (h *Chat) connect(w http.ResponseWriter, r *http.Request) {
 		var client *Client
 		switch req.Type {
 		case CONNECT_REQ:
-			// client = &Client{int(req.UserIdx), conn}
-			// h.app.ConnectAll(client)
+			client = h.connect(req.Body, conn)
+			h.app.ConnectAll(client)
 		case DISCONNECT_REQ:
-			h.app.DisconnectAll(client)
+			// h.app.DisconnectAll(client)
 		case CREATE_ROOM_REQ:
-			roomIdx, err := h.app.CreateRoom()
-			if err != nil {
-				h.logger.Printf("create room failed: %s", err)
-				continue
-			}
-			h.app.Join(roomIdx, client)
+			// roomIdx, err := h.app.CreateRoom()
+			// if err != nil {
+			// 	h.logger.Printf("create room failed: %s", err)
+			// 	continue
+			// }
+			// h.app.Join(roomIdx, client)
 		case JOIN_ROOM_REQ:
 			// h.app.Join(int(req.RoomIdx), client)
 		case EXIT_ROOM_REQ:
@@ -88,4 +88,18 @@ func (h *Chat) connect(w http.ResponseWriter, r *http.Request) {
 			// h.app.SendMsg(&req)
 		}
 	}
+}
+
+func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
+	reqData, ok := body.(struct {
+		userIdx int
+		name    string
+	})
+	if !ok {
+		h.logger.Println("wrong request body")
+		return nil
+
+	}
+	h.logger.Println(reqData)
+	return &Client{reqData.userIdx, reqData.name, conn }
 }
