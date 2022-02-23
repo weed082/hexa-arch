@@ -93,6 +93,7 @@ func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ws connect
 func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
 	reqData := &struct {
 		userIdx int    `mapstruct:"userIdx"`
@@ -100,12 +101,10 @@ func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
 	}{}
 	if mapstructure.Decode(body, reqData) != nil {
 		conn.WriteJSON(&chat.Res{Code: 400, Body: "wrong request body"})
-		h.logger.Println("wrong request body")
 		return nil
 	}
-	h.logger.Println(reqData)
 	client := &Client{reqData.userIdx, reqData.name, conn}
-	h.app.ConnectAll(client)
-
+	h.app.ConnectAll(client) // connect to rooms that client was participated in
+	client.SendMsg(&chat.Res{Code: 200}) // send success msg to client
 	return client
 }

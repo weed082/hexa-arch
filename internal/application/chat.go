@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/model/chat"
 )
 
 type Chat struct {
@@ -68,8 +67,6 @@ func (c *Chat) ConnectAll(client port.ChatClient) {
 	// TODO: search for existing chat room
 	// send connect success res
 	c.logger.Println(client)
-	msg := &chat.Msg{UserIdx: 1, Body: "yes"}
-	client.SendMsg(msg)
 }
 
 // //* disconnect the client from the chat room
