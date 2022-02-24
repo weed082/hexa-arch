@@ -104,7 +104,17 @@ func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
 		return nil
 	}
 	client := &Client{reqData.userIdx, reqData.name, conn}
-	h.app.ConnectAll(client) // connect to rooms that client was participated in
+	h.app.ConnectAll(client)             // connect to rooms that client was participated in
 	client.SendMsg(&chat.Res{Code: 200}) // send success msg to client
 	return client
+}
+
+func (h *Chat) createRoom(client *Client) {
+	roomIdx, err := h.app.CreateRoom()
+	if err != nil {
+		h.logger.Printf("create room failed: %s", err)
+    client.SendMsg(&chat.Res{Code: 500, Body: "create room failed"})
+    return 
+	}
+	h.app.Join(roomIdx, client)
 }
