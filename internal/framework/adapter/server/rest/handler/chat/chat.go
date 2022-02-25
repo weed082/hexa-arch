@@ -100,8 +100,8 @@ func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
 		return nil
 	}
 	client := &Client{reqData.userIdx, reqData.name, conn}
-	h.app.Connect(client)                // connect to rooms that client was participated in
-  h.app.SendRes(client,&chat.Res{Code: 200} )// send success msg to client
+	h.app.Connect(client)                       // connect to rooms that client was participated in
+	h.app.SendRes(client, &chat.Res{Code: 200}) // send success msg to client
 	return client
 }
 
