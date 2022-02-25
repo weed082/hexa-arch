@@ -77,12 +77,7 @@ func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
 		case DISCONNECT_REQ:
 			h.app.DisconnectAll(client)
 		case CREATE_ROOM_REQ:
-			roomIdx, err := h.app.CreateRoom()
-			if err != nil {
-				h.logger.Printf("create room failed: %s", err)
-				continue
-			}
-			h.app.Join(roomIdx, client)
+			h.createRoom(client)
 		case JOIN_ROOM_REQ:
 			// h.app.Join(int(req.RoomIdx), client)
 		case EXIT_ROOM_REQ:
@@ -109,6 +104,7 @@ func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
 	return client
 }
 
+// create chat room
 func (h *Chat) createRoom(client *Client) {
 	roomIdx, err := h.app.CreateRoom()
 	if err != nil {
@@ -117,4 +113,15 @@ func (h *Chat) createRoom(client *Client) {
 		return
 	}
 	h.app.Join(roomIdx, client)
+}
+
+// join chat room
+func (h *Chat) Join(roomIdx int, client *Client) {
+	err := h.app.JoinRoom(roomIdx, client)
+	if err != nil {
+		h.logger.Printf("join room failed: %s", err)
+		client.SendMsg(&chat.Res{Code: 500, Body: "join room failed"})
+		return
+	}
+
 }

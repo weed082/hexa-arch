@@ -3,10 +3,12 @@ package port
 //! 1. Chat
 type Chat interface {
 	CreateRoom() (int, error)
-	Join(roomIdx int, client ChatClient)
-	Exit(roomIdx, userIdx int)
-	ConnectAll(client ChatClient)
-	DisconnectAll(client ChatClient)
+	JoinRoom(roomIdx int, client ChatClient) error
+	ExitRoom(roomIdx, userIdx int) error
+	ConnectRoom(roomIdx int, client ChatClient)
+	ConnectRooms(rooms []int, client ChatClient)
+  DisconnectRoom(roomIdx, userIdx int)
+	DisconnectRooms(client ChatClient)
 	SendMsg(msg ChatMsg)
 }
 
