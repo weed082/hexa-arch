@@ -55,7 +55,7 @@ func (c *Chat) ExitRoom(roomIdx int, client port.ChatClient) error {
 }
 
 // send message to all clients that are participated in the chat room given
-func (c *Chat) SendMsg(roomIdx int, msg interface{}) {
+func (c *Chat) SendMsg(roomIdx int ,msg interface{}) {
 	c.pool.RegisterJob(func() {
 		for _, client := range c.rooms[roomIdx] {
 			err := client.SendMsg(msg)

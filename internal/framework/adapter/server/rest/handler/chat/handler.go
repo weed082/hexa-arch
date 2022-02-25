@@ -82,9 +82,9 @@ func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
 		case JOIN_ROOM_REQ:
 			h.joinRoom(req.Body, client)
 		case EXIT_ROOM_REQ:
-			// h.app.Exit(int(req.RoomIdx), client.GetUserIdx())
+			h.exitRoom(req.Body, client)
 		case MSG_REQ:
-			// h.app.SendMsg(&req)
+			h.broadcastMsg(req.Body, client)
 		}
 	}
 }
@@ -149,4 +149,25 @@ func (h *Chat) exitRoom(body interface{}, client *Client) {
 		return
 	}
 	h.app.SendRes(client, &chat.Res{Code: 200, Body: "success"})
+}
+
+// broadcast msg
+func (h *Chat) broadcastMsg(body interface{}, client *Client) {
+	reqData := &struct {
+		msgType int
+		roomIdx int
+		body    interface{}
+	}{}
+	if mapstructure.Decode(body, reqData) != nil {
+		h.app.SendRes(client, &chat.Res{Code: 400, Body: "wrong reqest body"})
+		return
+	}
+  roomIdx := reqData.roomIdx
+	msg := &chat.Msg{
+		RoomIdx: roomIdx,
+		UserIdx: client.userIdx,
+		Body:    reqData.body,
+		Name:    client.name,
+	}
+    h.app.SendMsg(roomIdx, msg)
 }
