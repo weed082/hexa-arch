@@ -49,24 +49,24 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 		}
 		switch msg.Request {
 		case CREATE_ROOM_REQ:
-			s.createRoom(c)
+			// s.createRoom(c)
 		case JOIN_ROOM_REQ:
-			s.app.JoinRoom(int(msg.RoomIdx), c)
+			// s.app.JoinRoom(int(msg.RoomIdx), c)
 		case EXIT_ROOM_REQ:
-			s.app.ExitRoom(int(msg.RoomIdx), int(msg.UserIdx))
+			// s.app.ExitRoom(int(msg.RoomIdx), int(msg.UserIdx))
 		case TEXT_MSG_REQ:
-			msg := &Message{&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body}}
-			s.app.SendMsg(msg)
+			// msg := &Message{&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body}}
+			// s.app.SendMsg(msg.GetRoomIdx(), msg)
 		}
 	}
 }
 
 func (s *Server) createRoom(c port.ChatClient) {
-	roomIdx, err := s.app.CreateRoom()
-	if err != nil {
-		s.logger.Printf("create room failed : %s", err)
-	}
-	s.app.JoinRoom(roomIdx, c)
-	msg := &Message{&pb.MsgRes{RoomIdx: int32(roomIdx)}}
-	s.app.SendMsg(msg)
+	// roomIdx, err := s.app.CreateRoom()
+	// if err != nil {
+	// 	s.logger.Printf("create room failed : %s", err)
+	// }
+	// s.app.JoinRoom(roomIdx, c)
+	// msg := &Message{&pb.MsgRes{RoomIdx: int32(roomIdx)}}
+	// s.app.SendMsg(msg)
 }
