@@ -113,8 +113,8 @@ func (h *Chat) createRoom(client *Client) {
 	roomIdx, err := h.app.CreateRoom()
 	if err != nil {
 		h.logger.Printf("create room failed: %s", err)
-    client.SendMsg(&chat.Res{Code: 500, Body: "create room failed"})
-    return 
+		client.SendMsg(&chat.Res{Code: 500, Body: "create room failed"})
+		return
 	}
 	h.app.Join(roomIdx, client)
 }
