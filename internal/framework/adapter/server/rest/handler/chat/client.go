@@ -3,7 +3,7 @@ package chat
 import "github.com/gorilla/websocket"
 
 type Client struct {
-                 	userIdx int
+	userIdx int
 	name    string
 	conn    *websocket.Conn
 }
