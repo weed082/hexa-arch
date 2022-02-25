@@ -33,7 +33,7 @@ func NewServer(logger *log.Logger, app port.Chat) *Server {
 //! --------------------- (1) grpc request ---------------------
 func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 	c := &Client{stream: stream}
-	defer s.app.DisconnectAll(c)
+	defer s.app.Disconnect(c)
 
 	for {
 		msg, err := stream.Recv()
@@ -51,9 +51,9 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 		case CREATE_ROOM_REQ:
 			s.createRoom(c)
 		case JOIN_ROOM_REQ:
-			s.app.Join(int(msg.RoomIdx), c)
+			s.app.JoinRoom(int(msg.RoomIdx), c)
 		case EXIT_ROOM_REQ:
-			s.app.Exit(int(msg.RoomIdx), int(msg.UserIdx))
+			s.app.ExitRoom(int(msg.RoomIdx), int(msg.UserIdx))
 		case TEXT_MSG_REQ:
 			msg := &Message{&pb.MsgRes{RoomIdx: msg.RoomIdx, UserIdx: msg.UserIdx, Body: msg.Body}}
 			s.app.SendMsg(msg)
@@ -66,7 +66,7 @@ func (s *Server) createRoom(c port.ChatClient) {
 	if err != nil {
 		s.logger.Printf("create room failed : %s", err)
 	}
-	s.app.Join(roomIdx, c)
+	s.app.JoinRoom(roomIdx, c)
 	msg := &Message{&pb.MsgRes{RoomIdx: int32(roomIdx)}}
 	s.app.SendMsg(msg)
 }
