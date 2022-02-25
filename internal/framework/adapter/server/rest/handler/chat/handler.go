@@ -162,12 +162,12 @@ func (h *Chat) broadcastMsg(body interface{}, client *Client) {
 		h.app.SendRes(client, &chat.Res{Code: 400, Body: "wrong reqest body"})
 		return
 	}
-  roomIdx := reqData.roomIdx
+	roomIdx := reqData.roomIdx
 	msg := &chat.Msg{
 		RoomIdx: roomIdx,
 		UserIdx: client.userIdx,
 		Body:    reqData.body,
 		Name:    client.name,
 	}
-    h.app.SendMsg(roomIdx, msg)
+	h.app.SendMsg(roomIdx, msg)
 }
