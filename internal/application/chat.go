@@ -23,25 +23,38 @@ func NewChat(logger *log.Logger, repo port.ChatRepo, pool port.WorkerPool) *Chat
 	}
 }
 
-//! ----------- 1. chat room -----------
+// put client to chat rooms
+func (c *Chat) Connect(client port.ChatClient) {
+	// TODO: get all rooms that client were participated in before
+	rooms := []int{1, 2}
+	c.connectRooms(rooms, client)
+}
+
+// remove client from all chat rooms
+func (c *Chat) Disconnect(client port.ChatClient) {
+	c.disconnectRooms(client)
+}
+
 // create a chat room
 func (c *Chat) CreateRoom() (int, error) {
-	roomIdx := 1 // TODO: need to get room idx from db
+	roomIdx := 1 // TODO: db work
 	return roomIdx, nil
 }
 
 // join room
 func (c *Chat) JoinRoom(roomIdx int, client port.ChatClient) error {
-	c.ConnectRoom(roomIdx, client) // connect room
+	c.connectRoom(roomIdx, client) // connect room
 	return nil
 }
 
 // exist a room
-func (c *Chat) ExitRoom(roomIdx, userIdx int) {
+func (c *Chat) ExitRoom(roomIdx, userIdx int) error {
+	//TODO: db work
+	c.disconnectRoom(roomIdx, userIdx) // remove client from target room
+	return nil
 }
 
-/** ----------- 3. message ----------- */
-//* send message to all clients that are participated in the chat room given
+// send message to all clients that are participated in the chat room given
 func (c *Chat) SendMsg(msg port.ChatMsg) {
 	c.pool.RegisterJob(func() {
 		roomIdx := msg.GetRoomIdx()
@@ -55,16 +68,16 @@ func (c *Chat) SendMsg(msg port.ChatMsg) {
 	})
 }
 
-/** ----------- ?. pool job for chat room ----------- */
+/** ----------- ?. chat pool job for chat room ----------- */
 // connect the client to the chat room
-func (c *Chat) ConnectRoom(roomIdx int, client port.ChatClient) {
+func (c *Chat) connectRoom(roomIdx int, client port.ChatClient) {
 	c.pool.RegisterJob(func() {
 		c.rooms[roomIdx] = append(c.rooms[roomIdx], client)
 	})
 }
 
 // connect rooms
-func (c *Chat) ConnectRooms(rooms []int, client port.ChatClient) {
+func (c *Chat) connectRooms(rooms []int, client port.ChatClient) {
 	c.pool.RegisterJob(func() {
 		for _, roomIdx := range rooms {
 			c.rooms[roomIdx] = append(c.rooms[roomIdx], client)
@@ -73,7 +86,8 @@ func (c *Chat) ConnectRooms(rooms []int, client port.ChatClient) {
 	})
 }
 
-func (c *Chat) DisconnectRoom(roomIdx, userIdx int) {
+// remove client from target room
+func (c *Chat) disconnectRoom(roomIdx, userIdx int) {
 	c.pool.RegisterJob(func() {
 		clients := c.rooms[roomIdx]
 		for i, client := range clients {
@@ -88,11 +102,10 @@ func (c *Chat) DisconnectRoom(roomIdx, userIdx int) {
 		}
 		c.logger.Println("no match user idx in the chat room")
 	})
-
 }
 
 // disconnect the client from all chat rooms that are participated in
-func (c *Chat) DisconnectRooms(client port.ChatClient) {
+func (c *Chat) disconnectRooms(client port.ChatClient) {
 	c.pool.RegisterJob(func() {
 		for roomIdx, clients := range c.rooms {
 			for i, existClient := range clients {

@@ -75,7 +75,7 @@ func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		case DISCONNECT_REQ:
-			h.app.DisconnectAll(client)
+			h.app.Disconnect(client)
 		case CREATE_ROOM_REQ:
 			h.createRoom(client)
 		case JOIN_ROOM_REQ:
@@ -99,7 +99,7 @@ func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
 		return nil
 	}
 	client := &Client{reqData.userIdx, reqData.name, conn}
-	h.app.ConnectAll(client)             // connect to rooms that client was participated in
+	h.app.Connect(client)                // connect to rooms that client was participated in
 	client.SendMsg(&chat.Res{Code: 200}) // send success msg to client
 	return client
 }
@@ -112,7 +112,7 @@ func (h *Chat) createRoom(client *Client) {
 		client.SendMsg(&chat.Res{Code: 500, Body: "create room failed"})
 		return
 	}
-	h.app.Join(roomIdx, client)
+	h.app.JoinRoom(roomIdx, client)
 }
 
 // join chat room
@@ -123,5 +123,4 @@ func (h *Chat) Join(roomIdx int, client *Client) {
 		client.SendMsg(&chat.Res{Code: 500, Body: "join room failed"})
 		return
 	}
-
 }
