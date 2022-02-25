@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -79,7 +80,7 @@ func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
 		case CREATE_ROOM_REQ:
 			h.createRoom(client)
 		case JOIN_ROOM_REQ:
-			// h.app.Join(int(req.RoomIdx), client)
+			h.joinRoom(req.Body, client)
 		case EXIT_ROOM_REQ:
 			// h.app.Exit(int(req.RoomIdx), client.GetUserIdx())
 		case MSG_REQ:
@@ -116,11 +117,36 @@ func (h *Chat) createRoom(client *Client) {
 }
 
 // join chat room
-func (h *Chat) Join(roomIdx int, client *Client) {
-	err := h.app.JoinRoom(roomIdx, client)
+func (h *Chat) joinRoom(body interface{}, client *Client) {
+	reqData := &struct {
+		roomIdx int
+	}{}
+	if mapstructure.Decode(body, reqData) != nil {
+		client.SendMsg(&chat.Res{Code: 400, Body: "wrong request body"})
+		return
+	}
+	err := h.app.JoinRoom(reqData.roomIdx, client)
 	if err != nil {
 		h.logger.Printf("join room failed: %s", err)
 		client.SendMsg(&chat.Res{Code: 500, Body: "join room failed"})
 		return
 	}
+}
+
+// exit room
+func (h *Chat) exitRoom(body interface{}, client *Client) {
+	reqData := &struct {
+		roomIdx int
+	}{}
+	if mapstructure.Decode(body, reqData) != nil {
+		client.SendMsg(&chat.Res{Code: 400, Body: "wrong reqest body"})
+		return
+	}
+
+	err := h.app.ExitRoom(reqData.roomIdx, client)
+	if err != nil {
+		h.app.SendRes(client, &chat.Res{Code: 400, Body: fmt.Sprintf("exit room failed: %s", err)})
+		return
+	}
+	client.SendMsg(&chat.Res{Code: 200, Body: "success"})
 }

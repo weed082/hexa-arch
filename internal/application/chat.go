@@ -48,16 +48,15 @@ func (c *Chat) JoinRoom(roomIdx int, client port.ChatClient) error {
 }
 
 // exist a room
-func (c *Chat) ExitRoom(roomIdx, userIdx int) error {
+func (c *Chat) ExitRoom(roomIdx int, client port.ChatClient) error {
 	//TODO: db work
-	c.disconnectRoom(roomIdx, userIdx) // remove client from target room
+	c.disconnectRoom(roomIdx, client.GetUserIdx()) // remove client from target room
 	return nil
 }
 
 // send message to all clients that are participated in the chat room given
-func (c *Chat) SendMsg(msg port.ChatMsg) {
+func (c *Chat) SendMsg(roomIdx int, msg interface{}) {
 	c.pool.RegisterJob(func() {
-		roomIdx := msg.GetRoomIdx()
 		for _, client := range c.rooms[roomIdx] {
 			err := client.SendMsg(msg)
 			if err != nil {
@@ -65,6 +64,13 @@ func (c *Chat) SendMsg(msg port.ChatMsg) {
 				continue
 			}
 		}
+	})
+}
+
+// send res back to client
+func (c *Chat) SendRes(client port.ChatClient, msg interface{}) {
+	c.pool.RegisterJob(func() {
+		client.SendMsg(msg)
 	})
 }
 
