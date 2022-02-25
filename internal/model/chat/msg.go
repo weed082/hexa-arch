@@ -8,3 +8,6 @@ type Msg struct {
 	Body    interface{} `json:"body"`
 }
 
+func (m *Msg) GetRoomIdx() int {
+	return m.RoomIdx
+}

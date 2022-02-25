@@ -65,7 +65,6 @@ func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
 	var client *Client
 	var req chat.Req
 	for {
-		// read, write req through ws
 		err := conn.ReadJSON(&req)
 		if err != nil {
 			h.logger.Printf("ws read msg failed: %s", err)
@@ -163,11 +162,10 @@ func (h *Chat) broadcastMsg(body interface{}, client *Client) {
 		return
 	}
 	roomIdx := reqData.roomIdx
-	msg := &chat.Msg{
+	h.app.SendMsg(roomIdx, &chat.Msg{
 		RoomIdx: roomIdx,
 		UserIdx: client.userIdx,
 		Body:    reqData.body,
 		Name:    client.name,
-	}
-	h.app.SendMsg(roomIdx, msg)
+	})
 }
