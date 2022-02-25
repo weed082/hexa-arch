@@ -101,7 +101,7 @@ func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
 	}
 	client := &Client{reqData.userIdx, reqData.name, conn}
 	h.app.Connect(client)                // connect to rooms that client was participated in
-	client.SendMsg(&chat.Res{Code: 200}) // send success msg to client
+  h.app.SendRes(client,&chat.Res{Code: 200} )// send success msg to client
 	return client
 }
 
@@ -110,7 +110,7 @@ func (h *Chat) createRoom(client *Client) {
 	roomIdx, err := h.app.CreateRoom()
 	if err != nil {
 		h.logger.Printf("create room failed: %s", err)
-		client.SendMsg(&chat.Res{Code: 500, Body: "create room failed"})
+		h.app.SendRes(client, &chat.Res{Code: 500, Body: "create room failed"})
 		return
 	}
 	h.app.JoinRoom(roomIdx, client)
@@ -122,13 +122,13 @@ func (h *Chat) joinRoom(body interface{}, client *Client) {
 		roomIdx int
 	}{}
 	if mapstructure.Decode(body, reqData) != nil {
-		client.SendMsg(&chat.Res{Code: 400, Body: "wrong request body"})
+		h.app.SendRes(client, &chat.Res{Code: 400, Body: "wrong request body"})
 		return
 	}
 	err := h.app.JoinRoom(reqData.roomIdx, client)
 	if err != nil {
 		h.logger.Printf("join room failed: %s", err)
-		client.SendMsg(&chat.Res{Code: 500, Body: "join room failed"})
+		h.app.SendRes(client, &chat.Res{Code: 500, Body: "join room failed"})
 		return
 	}
 }
@@ -139,7 +139,7 @@ func (h *Chat) exitRoom(body interface{}, client *Client) {
 		roomIdx int
 	}{}
 	if mapstructure.Decode(body, reqData) != nil {
-		client.SendMsg(&chat.Res{Code: 400, Body: "wrong reqest body"})
+		h.app.SendRes(client, &chat.Res{Code: 400, Body: "wrong reqest body"})
 		return
 	}
 
@@ -148,5 +148,5 @@ func (h *Chat) exitRoom(body interface{}, client *Client) {
 		h.app.SendRes(client, &chat.Res{Code: 400, Body: fmt.Sprintf("exit room failed: %s", err)})
 		return
 	}
-	client.SendMsg(&chat.Res{Code: 200, Body: "success"})
+	h.app.SendRes(client, &chat.Res{Code: 200, Body: "success"})
 }
