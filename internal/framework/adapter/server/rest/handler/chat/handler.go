@@ -162,7 +162,7 @@ func (h *Chat) broadcastMsg(body interface{}, client *Client) {
 		return
 	}
 	roomIdx := reqData.roomIdx
-	h.app.SendMsg(roomIdx, &chat.Msg{
+	h.app.SendMsg(&chat.Msg{
 		RoomIdx: roomIdx,
 		UserIdx: client.userIdx,
 		Body:    reqData.body,

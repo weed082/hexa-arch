@@ -7,7 +7,7 @@ type Chat interface {
 	Disconnect(client ChatClient)
 	JoinRoom(roomIdx int, client ChatClient) error
 	ExitRoom(roomIdx int, client ChatClient) error
-	SendMsg(roomIdx int, msg interface{})
+	SendMsg(msg ChatMsg)
 	SendRes(client ChatClient, msg interface{})
 }
 
