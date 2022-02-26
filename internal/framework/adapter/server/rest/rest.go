@@ -37,8 +37,8 @@ func (r *Rest) Run(port string) {
 	router := router.New() // custom router
 	// handlers
   middlleware.NewServer(r.logger).Register(router)
-	user.NewUser(r.logger, r.userApp).Register(router)
-	chat.NewChat(r.logger, r.chatApp).Register(router)
+	user.New(r.logger, r.userApp).Register(router)
+	chat.New(r.logger, r.chatApp).Register(router)
 
 	// serve rest server
 	server := server.NewServer(router, ":"+port)
