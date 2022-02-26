@@ -36,7 +36,7 @@ func NewRestAdapter(
 func (r *Rest) Run(port string) {
 	router := router.New() // custom router
 	// handlers
-	middlleware.NewServer(r.logger).Register(router)
+	middlleware.New(r.logger).Register(router)
 	user.New(r.logger, r.userApp).Register(router)
 	chat.New(r.logger, r.chatApp).Register(router)
 

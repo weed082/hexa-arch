@@ -7,21 +7,21 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/rest/handler"
 )
 
-type Middleware struct {
+type Handler struct {
 	logger *log.Logger
 }
 
-func NewServer(logger *log.Logger) *Middleware {
-	return &Middleware{
+func New(logger *log.Logger) *Handler {
+	return &Handler{
 		logger: logger,
 	}
 }
 
-func (m Middleware) Register(r handler.Router) {
+func (m Handler) Register(r handler.Router) {
 	r.Use(m.setHeader)
 }
 
-func (m *Middleware) setHeader(next http.Handler) http.Handler {
+func (m *Handler) setHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "*")
