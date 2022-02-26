@@ -28,24 +28,24 @@ const (
 	VIDEO_MSG = 4
 )
 
-type Chat struct {
+type Handler struct {
 	logger *log.Logger
 	app    port.Chat
 }
 
-func NewChat(logger *log.Logger, app port.Chat) *Chat {
-	return &Chat{
+func New(logger *log.Logger, app port.Chat) *Handler {
+	return &Handler{
 		logger: logger,
 		app:    app,
 	}
 }
 
-func (h *Chat) Register(r handler.Router) {
+func (h *Handler) Register(r handler.Router) {
 	r.Get("/chat", h.chat)
 }
 
 //* ws connection
-func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) chat(w http.ResponseWriter, r *http.Request) {
 	wsUpgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -89,7 +89,7 @@ func (h *Chat) chat(w http.ResponseWriter, r *http.Request) {
 }
 
 // ws connect
-func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
+func (h *Handler) connect(body interface{}, conn *websocket.Conn) *Client {
 	reqData := &struct {
 		userIdx int    `mapstruct:"userIdx"`
 		name    string `mapstruct:"name"`
@@ -105,7 +105,7 @@ func (h *Chat) connect(body interface{}, conn *websocket.Conn) *Client {
 }
 
 // create chat room
-func (h *Chat) createRoom(client *Client) {
+func (h *Handler) createRoom(client *Client) {
 	roomIdx, err := h.app.CreateRoom()
 	if err != nil {
 		h.logger.Printf("create room failed: %s", err)
@@ -116,7 +116,7 @@ func (h *Chat) createRoom(client *Client) {
 }
 
 // join chat room
-func (h *Chat) joinRoom(body interface{}, client *Client) {
+func (h *Handler) joinRoom(body interface{}, client *Client) {
 	reqData := &struct {
 		roomIdx int
 	}{}
@@ -133,7 +133,7 @@ func (h *Chat) joinRoom(body interface{}, client *Client) {
 }
 
 // exit room
-func (h *Chat) exitRoom(body interface{}, client *Client) {
+func (h *Handler) exitRoom(body interface{}, client *Client) {
 	reqData := &struct {
 		roomIdx int
 	}{}
@@ -151,7 +151,7 @@ func (h *Chat) exitRoom(body interface{}, client *Client) {
 }
 
 // broadcast msg
-func (h *Chat) broadcastMsg(body interface{}, client *Client) {
+func (h *Handler) broadcastMsg(body interface{}, client *Client) {
 	reqData := &struct {
 		msgType int
 		roomIdx int

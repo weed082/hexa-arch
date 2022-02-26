@@ -107,7 +107,6 @@ func (c *Chat) disconnectRoom(roomIdx, userIdx int) {
 				break
 			}
 		}
-		c.logger.Println("no match user idx in the chat room")
 	})
 }
 

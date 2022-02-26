@@ -10,23 +10,23 @@ import (
 	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 )
 
-type User struct {
+type Handler struct {
 	logger *log.Logger
 	app    port.User
 }
 
-func NewUser(logger *log.Logger, app port.User) *User {
-	return &User{
+func New(logger *log.Logger, app port.User) *Handler {
+	return &Handler{
 		logger: logger,
 		app:    app,
 	}
 }
 
-func (h *User) Register(r handler.Router) {
+func (h *Handler) Register(r handler.Router) {
 	r.Post("/user/create", h.create)
 }
 
-func (h *User) create(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	reqBody := struct {
 		TestStr string `json:"test_str"`
 	}{}
