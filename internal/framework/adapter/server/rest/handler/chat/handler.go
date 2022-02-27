@@ -153,9 +153,9 @@ func (h *Handler) exitRoom(body interface{}, client *Client) {
 // broadcast msg
 func (h *Handler) broadcastMsg(body interface{}, client *Client) {
 	reqData := &struct {
-		msgType int `mapstruct:"msgType"`
-		roomIdx int `mapstruct:"roomIdx"`
-    body    interface{} `mapstruct:"bod"`
+		msgType int         `mapstruct:"msgType"`
+		roomIdx int         `mapstruct:"roomIdx"`
+		body    interface{} `mapstruct:"body"`
 	}{}
 	if mapstructure.Decode(body, reqData) != nil {
 		h.app.SendRes(client, &chat.Res{Code: 400, Body: "wrong reqest body"})
