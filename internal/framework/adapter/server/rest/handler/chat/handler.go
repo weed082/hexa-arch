@@ -118,7 +118,7 @@ func (h *Handler) createRoom(client *Client) {
 // join chat room
 func (h *Handler) joinRoom(body interface{}, client *Client) {
 	reqData := &struct {
-		roomIdx int
+		roomIdx int `mapstruct:"roomIdx"`
 	}{}
 	if mapstructure.Decode(body, reqData) != nil {
 		h.app.SendRes(client, &chat.Res{Code: 400, Body: "wrong request body"})
@@ -135,7 +135,7 @@ func (h *Handler) joinRoom(body interface{}, client *Client) {
 // exit room
 func (h *Handler) exitRoom(body interface{}, client *Client) {
 	reqData := &struct {
-		roomIdx int
+		roomIdx int `mapstruct:"roomIdx"`
 	}{}
 	if mapstructure.Decode(body, reqData) != nil {
 		h.app.SendRes(client, &chat.Res{Code: 400, Body: "wrong reqest body"})
@@ -153,9 +153,9 @@ func (h *Handler) exitRoom(body interface{}, client *Client) {
 // broadcast msg
 func (h *Handler) broadcastMsg(body interface{}, client *Client) {
 	reqData := &struct {
-		msgType int
-		roomIdx int
-		body    interface{}
+		msgType int `mapstruct:"msgType"`
+		roomIdx int `mapstruct:"roomIdx"`
+    body    interface{} `mapstruct:"bod"`
 	}{}
 	if mapstructure.Decode(body, reqData) != nil {
 		h.app.SendRes(client, &chat.Res{Code: 400, Body: "wrong reqest body"})
