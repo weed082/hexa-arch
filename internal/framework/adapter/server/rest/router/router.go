@@ -66,12 +66,12 @@ func (router *Router) addRoute(method, path string, handleFunc http.HandlerFunc)
 	router.routes[method][path] = chainedHandler.ServeHTTP
 }
 
-func (router *Router) makeCustomRegexParam(param string) string {
+func (router Router) makeCustomRegexParam(param string) string {
 	splits := strings.SplitN(param, "(", 2)
 	return "(?P<" + splits[0][1:] + ">(" + splits[1] + ")"
 }
 
-func (router *Router) makeRegexParam(param string) string {
+func (router Router) makeRegexParam(param string) string {
 	return "(?P<" + param[1:] + ">([^/]+))"
 }
 
@@ -83,7 +83,7 @@ func (router *Router) Use(middlewares ...func(http.Handler) http.Handler) {
 	router.middlewares = append(router.middlewares, middlewares...)
 }
 
-func (router *Router) chain(endpoint http.Handler) http.Handler {
+func (router Router) chain(endpoint http.Handler) http.Handler {
 	if router.middlewares == nil {
 		return endpoint
 	}
@@ -96,7 +96,7 @@ func (router *Router) chain(endpoint http.Handler) http.Handler {
 }
 
 // ---------------- (4) request listener ----------------
-func (router *Router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (router Router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	handleFunc, ok := router.routes[r.Method][r.URL.Path]
 	if ok {
 		handleFunc(rw, r)
@@ -112,7 +112,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	http.NotFound(rw, r)
 }
 
-func (router *Router) makeContextWithParams(r *http.Request, regexPath *regexp.Regexp) *http.Request {
+func (router Router) makeContextWithParams(r *http.Request, regexPath *regexp.Regexp) *http.Request {
 	paramValues := regexPath.FindStringSubmatch(r.URL.Path)
 	params := make(map[string]string)
 
