@@ -6,6 +6,6 @@ type Message struct {
 	msg *pb.MsgRes
 }
 
-func (m *Message) GetRoomIdx() int {
+func (m Message) GetRoomIdx() int {
 	return int(m.msg.RoomIdx)
 }

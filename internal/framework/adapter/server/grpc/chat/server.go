@@ -31,7 +31,7 @@ func NewServer(logger *log.Logger, app port.Chat) *Server {
 }
 
 //! --------------------- (1) grpc request ---------------------
-func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
+func (s Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 	c := &Client{stream: stream}
 	defer s.app.Disconnect(c)
 
@@ -61,7 +61,7 @@ func (s *Server) ChatService(stream pb.ChatService_ChatServiceServer) error {
 	}
 }
 
-func (s *Server) createRoom(c port.ChatClient) {
+func (s Server) createRoom(c port.ChatClient) {
 	// roomIdx, err := s.app.CreateRoom()
 	// if err != nil {
 	// 	s.logger.Printf("create room failed : %s", err)

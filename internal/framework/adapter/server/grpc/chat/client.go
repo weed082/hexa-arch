@@ -12,11 +12,11 @@ type Client struct {
 	stream  pb.ChatService_ChatServiceServer
 }
 
-func (c *Client) GetUserIdx() int {
+func (c Client) GetUserIdx() int {
 	return c.userIdx
 }
 
-func (c *Client) SendMsg(msg interface{}) error {
+func (c Client) SendMsg(msg interface{}) error {
 	msgRes, ok := msg.(*pb.MsgRes)
 	if !ok {
 		return errors.New("type assertion to pb struct failed")
