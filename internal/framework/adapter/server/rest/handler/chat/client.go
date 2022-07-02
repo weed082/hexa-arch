@@ -8,11 +8,11 @@ type Client struct {
 	conn    *websocket.Conn
 }
 
-func (c *Client) GetUserIdx() int {
+func (c Client) GetUserIdx() int {
 	return c.userIdx
 }
 
-func (c *Client) SendMsg(msg interface{}) error {
+func (c Client) SendMsg(msg interface{}) error {
 	err := c.conn.WriteJSON(msg)
 	if err != nil {
 		return err
