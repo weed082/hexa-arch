@@ -21,7 +21,7 @@ func (m Handler) Register(r handler.Router) {
 	r.Use(m.setHeader)
 }
 
-func (m *Handler) setHeader(next http.Handler) http.Handler {
+func (m Handler) setHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "*")
