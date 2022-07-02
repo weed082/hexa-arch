@@ -89,7 +89,7 @@ func (h Handler) chat(w http.ResponseWriter, r *http.Request) {
 }
 
 // ws connect
-func (h *Handler) connect(body interface{}, conn *websocket.Conn) *Client {
+func (h Handler) connect(body interface{}, conn *websocket.Conn) *Client {
 	reqData := &struct {
 		userIdx int    `mapstruct:"userIdx"`
 		name    string `mapstruct:"name"`
@@ -105,7 +105,7 @@ func (h *Handler) connect(body interface{}, conn *websocket.Conn) *Client {
 }
 
 // create chat room
-func (h *Handler) createRoom(client *Client) {
+func (h Handler) createRoom(client *Client) {
 	roomIdx, err := h.app.CreateRoom()
 	if err != nil {
 		h.logger.Printf("create room failed: %s", err)
@@ -116,7 +116,7 @@ func (h *Handler) createRoom(client *Client) {
 }
 
 // join chat room
-func (h *Handler) joinRoom(body interface{}, client *Client) {
+func (h Handler) joinRoom(body interface{}, client *Client) {
 	reqData := &struct {
 		roomIdx int `mapstruct:"roomIdx"`
 	}{}
@@ -133,7 +133,7 @@ func (h *Handler) joinRoom(body interface{}, client *Client) {
 }
 
 // exit room
-func (h *Handler) exitRoom(body interface{}, client *Client) {
+func (h Handler) exitRoom(body interface{}, client *Client) {
 	reqData := &struct {
 		roomIdx int `mapstruct:"roomIdx"`
 	}{}
@@ -151,7 +151,7 @@ func (h *Handler) exitRoom(body interface{}, client *Client) {
 }
 
 // broadcast msg
-func (h *Handler) broadcastMsg(body interface{}, client *Client) {
+func (h Handler) broadcastMsg(body interface{}, client *Client) {
 	reqData := &struct {
 		msgType int         `mapstruct:"msgType"`
 		roomIdx int         `mapstruct:"roomIdx"`
