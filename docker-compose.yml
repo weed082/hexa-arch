@@ -26,9 +26,9 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     expose:
-      - 3306
+      - ${MYSQL_PORT}
     ports:
-      - 3306:3306
+      - ${MYSQL_PORT}:${MYSQL_PORT}
     environment:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
@@ -41,7 +41,7 @@ services:
     image: mongo:${MONGO_VERSION}
     restart: always
     ports:
-      - 27017:27017
+      - ${MONGO_PORT}:${MONGO_PORT}
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
