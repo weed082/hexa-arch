@@ -1,11 +1,10 @@
 # Dockerfile
 FROM golang:1.18.3-alpine3.16 
 WORKDIR /app
-RUN go install github.com/cosmtrek/air@latest
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
+RUN go install github.com/githubnemo/CompileDaemon@latest # for hot reload
 COPY . .
-RUN go build cmd/main.go
 
-ENTRYPOINT ["air", "-c", "air.toml"]
+ENTRYPOINT CompileDaemon --build="go build -o main ./cmd/main.go"  --command=./main
