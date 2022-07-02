@@ -41,8 +41,8 @@ func (r *Rest) Run(port string) {
 	chat.New(r.logger, r.chatApp).Register(router)
 
 	// serve rest server
-	server := server.NewServer(router, ":"+port)
-	err := server.ListenAndServe()
+	r.server = server.NewServer(router, ":"+port)
+	err := r.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		r.logger.Fatalf("rest server error: %s", err)
 	}
