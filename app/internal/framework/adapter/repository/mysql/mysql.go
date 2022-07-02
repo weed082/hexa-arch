@@ -13,6 +13,7 @@ type Mysql struct {
 }
 
 func NewMysql(logger *log.Logger, driverName, dataSourceName string) *Mysql {
+	logger.Println(dataSourceName)
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		logger.Fatalf("db connection failure: %v", err)
