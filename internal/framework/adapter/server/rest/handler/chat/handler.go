@@ -40,12 +40,12 @@ func New(logger *log.Logger, app port.Chat) *Handler {
 	}
 }
 
-func (h *Handler) Register(r handler.Router) {
+func (h Handler) Register(r handler.Router) {
 	r.Get("/chat", h.chat)
 }
 
 //* ws connection
-func (h *Handler) chat(w http.ResponseWriter, r *http.Request) {
+func (h Handler) chat(w http.ResponseWriter, r *http.Request) {
 	wsUpgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
