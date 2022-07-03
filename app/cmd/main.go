@@ -41,7 +41,7 @@ func main() {
 	chatApp := application.NewChat(logger, chatRepo, chatPool)
 
 	go runRest(chatApp)
-	go runGrpc(chatApp)
+	// go runGrpc(chatApp)
 	gracefulShutdown() // block until grpc and rest server finishes
 }
 

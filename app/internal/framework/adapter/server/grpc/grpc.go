@@ -4,23 +4,16 @@ import (
 	"log"
 	"net"
 
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat"
-	bidichatpb "github.com/ByungHakNoh/hexagonal-microservice/internal/framework/adapter/server/grpc/chat/pb"
-	"github.com/ByungHakNoh/hexagonal-microservice/internal/framework/port"
 	"google.golang.org/grpc"
 )
 
 type Grpc struct {
-	logger  *log.Logger
-	server  *grpc.Server
-	chatApp port.Chat
+	logger *log.Logger
+	server *grpc.Server
 }
 
-func NewServer(logger *log.Logger, chatApp port.Chat) *Grpc {
-	return &Grpc{
-		logger:  logger,
-		chatApp: chatApp,
-	}
+func NewServer(logger *log.Logger) *Grpc {
+	return &Grpc{logger: logger}
 }
 
 func (g *Grpc) Run(port string) {
@@ -28,12 +21,7 @@ func (g *Grpc) Run(port string) {
 	if err != nil {
 		g.logger.Fatalf("failed to listen on port %s", port)
 	}
-
 	g.server = grpc.NewServer()
-	// bi-directional chat
-	bidiChatServer := chat.NewServer(g.logger, g.chatApp)
-	bidichatpb.RegisterChatServiceServer(g.server, bidiChatServer)
-
 	err = g.server.Serve(listener)
 	if err != nil {
 		g.logger.Fatalf("grpc serve error : %s", err)
