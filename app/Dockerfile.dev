@@ -7,4 +7,4 @@ RUN go mod download
 RUN go install github.com/githubnemo/CompileDaemon@latest # for hot reload
 COPY . .
 
-ENTRYPOINT CompileDaemon --build="go build -o main ./cmd/main.go"  --command=./main
+ENTRYPOINT CompileDaemon --build="go build -o ./bin/main ./cmd/main.go"  --command=./bin/main
