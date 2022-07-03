@@ -26,8 +26,10 @@ var (
 	grpcServer *grpc.Grpc
 	restServer *rest.Rest
 	// database
-	mysqlDB = mysql.NewMysql(logger, "mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE")))
-	mongoDB = mongo.NewMongoDB(logger, fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST")))
+	sqlUrl   = fmt.Sprintf("%s:%s@tcp(%s)/%s", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE"))
+	mysqlDB  = mysql.NewMysql(logger, "mysql", sqlUrl)
+	mongoUrl = fmt.Sprintf("mongodb://%s:%s@%s", os.Getenv("MONGO_USER"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST"))
+	mongoDB  = mongo.NewMongoDB(logger, mongoUrl)
 	// chat worker pool
 	chatPool = pool.NewWorkerPool(logger, chatWg, 100)
 	chatWg   = &sync.WaitGroup{}
