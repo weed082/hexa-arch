@@ -58,7 +58,7 @@ func runRest(chatApp port.Chat) {
 //! run grpc server
 func runGrpc(chatApp port.Chat) {
 	// grpc
-	grpcServer = grpc.NewServer(logger, chatApp)
+	grpcServer = grpc.NewServer(logger)
 	grpcServer.Run(os.Getenv("GRPC_PORT"))
 }
 
